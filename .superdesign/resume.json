@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/": {
+      "targetKind": "new-ui",
+      "projectId": "1cc3f362-7905-4316-87a2-285056579b69",
+      "designSystemPath": ".superdesign/design-system.md",
+      "activeDraftId": "bf182d07-1f7a-4936-98b2-c99f3cfe4dcf",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "resources/css/app.css"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "856c91695df7f5bc6c37223da67b1f6522300a4d85603ff4937218473e45fb1e",
+        "resources/css/app.css": "02db84e827e06d8349293e9797eb8d81465e109e91976775964c4bf873b6fab5"
+      },
+      "components": [],
+      "drafts": {
+        "bf182d07-1f7a-4936-98b2-c99f3cfe4dcf": {
+          "title": "خانه کیوسک — کشف محلی",
+          "visualDirection": "Compact warm Persian discovery homepage with Yelp-like red star tiles and demo search",
+          "parentDraftId": null,
+          "currentVersion": 2
+        }
+      },
+      "updatedAt": "2026-09-04T23:24:44.289922+00:00"
+    }
+  }
+}
