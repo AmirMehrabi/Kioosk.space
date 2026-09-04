@@ -1,3 +1,6 @@
+import "./auth";
+
+if (document.querySelector('form[role="search"]')) {
 const form=document.querySelector('form[role="search"]');
 const query=form.elements.query, locationField=form.elements.location;
 const cards=[...document.querySelectorAll('#places article')];
@@ -33,3 +36,5 @@ document.querySelector('[data-city-select]').addEventListener('click', () => {
     locationField.focus({ preventScroll: true });
     locationField.select();
 });
+
+}

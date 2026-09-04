@@ -51,6 +51,14 @@ return [
     */
 
     'channels' => [
+        'sms' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/sms.log'),
+            'level' => 'info',
+            'max_files' => 3,
+            'permission' => 0600,
+            'replace_placeholders' => true,
+        ],
 
         'stack' => [
             'driver' => 'stack',

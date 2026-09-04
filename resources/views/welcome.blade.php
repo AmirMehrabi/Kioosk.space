@@ -18,12 +18,14 @@
         <a id="header-brand-link" href="#top" class="inline-flex min-h-11 items-center rounded-xl text-[28px] font-extrabold tracking-[-0.05em] text-ink outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2" aria-label="صفحه اصلی کیوسک">کیوسک<span class="mr-1 text-pomegranate">.</span></a>
         <nav class="hidden items-center gap-8 text-[15px] font-medium text-secondary md:flex" aria-label="راهبری اصلی">
           <a id="nav-discover-link" href="#places" class="flex min-h-11 items-center transition-colors duration-200 hover:text-pomegranate focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">کشف مکان‌ها</a>
-          <a data-demo-action id="nav-review-link" href="#community" class="flex min-h-11 items-center transition-colors duration-200 hover:text-pomegranate focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">نوشتن نظر</a>
-          <a data-demo-action id="nav-business-link" href="#footer" class="flex min-h-11 items-center transition-colors duration-200 hover:text-pomegranate focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">برای کسب‌وکارها</a>
+          <a id="nav-review-link" href="{{ route('account') }}" class="flex min-h-11 items-center transition-colors duration-200 hover:text-pomegranate focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">نوشتن نظر</a>
+          <a id="nav-business-link" href="{{ route('business.login') }}" class="flex min-h-11 items-center transition-colors duration-200 hover:text-pomegranate focus-visible:rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">برای کسب‌وکارها</a>
         </nav>
         <div class="hidden items-center gap-3 md:flex">
-          <a data-demo-action id="header-login-link" href="#footer" class="inline-flex min-h-11 items-center justify-center px-3 text-sm font-semibold text-secondary transition-colors hover:text-ink focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">ورود</a>
-          <a data-demo-action id="header-signup-link" href="#footer" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-bold text-ink transition-all duration-200 hover:border-muted hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">ثبت‌نام</a>
+          <a id="header-login-link" href="{{ route(auth()->check() ? 'account' : 'login') }}" class="inline-flex min-h-11 items-center justify-center px-3 text-sm font-semibold text-secondary transition-colors hover:text-ink focus-visible:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">{{ auth()->check() ? 'حساب من' : 'ورود' }}</a>
+          @guest
+          <a id="header-signup-link" href="{{ route('register') }}" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-border bg-surface px-5 text-sm font-bold text-ink transition-all duration-200 hover:border-muted hover:shadow-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pomegranate focus-visible:ring-offset-2">ثبت‌نام</a>
+          @endguest
         </div>
         <button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-ink md:hidden" id="menu-toggle" aria-controls="mobile-menu" aria-expanded="false" aria-label="باز کردن فهرست">
           <iconify-icon icon="lucide:menu" class="text-[22px]" aria-hidden="true"></iconify-icon>
@@ -31,6 +33,7 @@
       </div>
     </header>
     <nav id="mobile-menu" hidden aria-label="فهرست موبایل" class="border-b border-border bg-surface px-4 py-3 md:hidden">
+      <a href="{{ route(auth()->check() ? 'account' : 'login') }}" class="block rounded-xl p-3 hover:bg-soft">{{ auth()->check() ? 'حساب من' : 'ورود / ثبت‌نام' }}</a>
       <a id="mobile-discover" href="#places" class="block rounded-xl p-3 hover:bg-soft">کشف مکان‌ها</a>
       <a id="mobile-reviews" href="#community" class="block rounded-xl p-3 hover:bg-soft">نظرهای مردم</a>
     </nav>
@@ -142,7 +145,7 @@
       <div class="mx-auto grid max-w-[1240px] grid-cols-1 gap-10 px-4 py-10 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-6 md:py-12">
         <div><div class="text-[25px] font-extrabold tracking-[-0.05em]">کیوسک<span class="mr-1 text-pomegranate">.</span></div><p class="mt-3 max-w-[290px] text-sm leading-7 text-muted">راه ساده پیدا کردن جای خوب، با کمک تجربه مردم شهر.</p></div>
         <div><h3 class="text-sm font-bold">کیوسک</h3><div class="mt-3 flex flex-col text-sm text-muted"><a id="footer-about-link" href="#top" class="min-h-11 py-2 hover:text-ink">درباره ما</a><a id="footer-guidelines-link" href="#community" class="min-h-11 py-2 hover:text-ink">راهنمای نوشتن نظر</a></div></div>
-        <div><h3 class="text-sm font-bold">همراهی</h3><div class="mt-3 flex flex-col text-sm text-muted"><a data-demo-action id="footer-business-link" href="#footer" class="min-h-11 py-2 hover:text-ink">برای کسب‌وکارها</a><a id="footer-contact-link" href="#footer" class="min-h-11 py-2 hover:text-ink">تماس با ما</a></div></div>
+        <div><h3 class="text-sm font-bold">همراهی</h3><div class="mt-3 flex flex-col text-sm text-muted"><a id="footer-business-link" href="{{ route('business.login') }}" class="min-h-11 py-2 hover:text-ink">برای کسب‌وکارها</a><a id="footer-contact-link" href="#footer" class="min-h-11 py-2 hover:text-ink">تماس با ما</a></div></div>
         <div><h3 class="text-sm font-bold">شهر</h3><button type="button" data-city-select class="mt-3 inline-flex min-h-11 w-full items-center justify-between rounded-xl border border-border bg-surface px-4 text-sm text-secondary"><span class="flex items-center gap-2"><iconify-icon icon="lucide:map-pin" aria-hidden="true"></iconify-icon>تهران</span><iconify-icon icon="lucide:chevron-down" aria-hidden="true"></iconify-icon></button></div>
       </div>
       <div class="border-t border-border"><div class="mx-auto flex max-w-[1240px] flex-col gap-2 px-4 py-5 text-xs text-muted sm:flex-row sm:items-center sm:justify-between md:px-6"><p>کیوسک؛ شهر از نگاه شما</p><p>اطلاعات و نظرات این صفحه نمونه هستند.</p></div></div>
