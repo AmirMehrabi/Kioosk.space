@@ -2,12 +2,14 @@
 
 use App\Enums\Portal;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\PortalController;
 use App\Http\Middleware\AuthResponseHeaders;
 use App\Http\Middleware\EnsurePortalAccess;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/businesses/{slug}', [BusinessController::class, 'show'])->name('businesses.show');
 
 Route::middleware(AuthResponseHeaders::class)->group(function () {
     foreach (Portal::cases() as $portal) {

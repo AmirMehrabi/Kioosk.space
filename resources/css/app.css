@@ -18,3 +18,14 @@
     --color-positive: #247a56;
     --shadow-soft: 0 8px 30px rgb(36 27 20 / 7%);
 }
+
+@layer base {
+    [x-cloak] { display: none !important; }
+    button, a, input, textarea, select, summary { &:focus-visible { outline: 2px solid var(--color-pomegranate); outline-offset: 3px; } }
+}
+@layer components {
+    .rating-progress { appearance: none; border: 0; background: var(--color-soft); }
+    .rating-progress::-webkit-progress-bar { background: var(--color-soft); border-radius: 999px; }
+    .rating-progress::-webkit-progress-value { background: var(--color-pomegranate); border-radius: 999px; }
+    .rating-progress::-moz-progress-bar { background: var(--color-pomegranate); border-radius: 999px; }
+}

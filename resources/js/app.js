@@ -1,9 +1,12 @@
+import "./business";
 import "./auth";
 
 if (document.querySelector('form[role="search"]')) {
 const form=document.querySelector('form[role="search"]');
 const query=form.elements.query, locationField=form.elements.location;
 const cards=[...document.querySelectorAll('#places article')];
+const initialQuery = new URLSearchParams(location.search).get('query');
+if (initialQuery) { query.value = initialQuery; queueMicrotask(filter); }
 const normalize=s=>s.replace(/ي/g,'ی').replace(/ك/g,'ک').replace(/\u200c/g,'').trim();
 function filter(){const q=normalize(query.value),l=normalize(locationField.value);let count=0;cards.forEach(card=>{const t=normalize(card.textContent+' تهران صبحانه');card.hidden=!(t.includes(q)&&(!l||t.includes(l)));if(!card.hidden)count++});document.getElementById('no-results').hidden=count>0;}
 form.addEventListener('submit',event=>{event.preventDefault();filter();document.getElementById('places').scrollIntoView()});
