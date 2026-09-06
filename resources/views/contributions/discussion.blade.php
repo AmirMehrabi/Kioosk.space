@@ -1,8 +1,10 @@
 @extends('layouts.community')
+@section('breadcrumbs')
+    <x-breadcrumbs :items="[['label' => $review->business->name, 'url' => route('businesses.show', $review->business->slug)], ['label' => 'گفت‌وگو']]" />
+@endsection
 @section('title', 'گفت‌وگو')
 @section('content')
 <div class="mx-auto max-w-2xl">
-    <a class="text-pomegranate" href="{{ route('businesses.show', $review->business->slug) }}">{{ $review->business->name }} ←</a>
     <h1 class="my-5 text-2xl font-bold">گفت‌وگو درباره تجربه {{ $review->author->name }}</h1>
     <p class="panel whitespace-pre-wrap leading-8">{{ $review->body }}</p>
     <div class="my-6 space-y-4">

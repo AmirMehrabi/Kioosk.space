@@ -1,4 +1,7 @@
 @extends('layouts.community')
+@section('breadcrumbs')
+    <x-breadcrumbs :items="[['label' => 'حساب کاربری', 'url' => route('account')], ['label' => 'مشارکت‌های من']]" />
+@endsection
 @section('title', 'مشارکت‌های من')
 @section('content')
 @php($labels = ['draft'=>'پیش‌نویس', 'pending'=>'در انتظار تأیید مکان', 'published'=>'منتشرشده', 'approved'=>'تأییدشده', 'corrections'=>'نیازمند اصلاح', 'rejected'=>'ردشده؛ قابل اصلاح', 'hidden'=>'پنهان‌شده برای بررسی', 'incomplete'=>'اطلاعات ناقص', 'merged'=>'ادغام‌شده'])

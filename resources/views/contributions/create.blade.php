@@ -1,4 +1,7 @@
 @extends('layouts.community')
+@section('breadcrumbs')
+    <x-breadcrumbs :items="auth()->check() ? [['label' => 'مشارکت‌های من', 'url' => route('contributions.index')], ['label' => request()->routeIs('reviews.edit') ? 'ویرایش تجربه من' : 'افزودن مکان یا نوشتن نظر']] : [['label' => 'افزودن مکان یا نوشتن نظر']]" />
+@endsection
 @section('title', 'افزودن مکان یا نوشتن نظر')
 @section('content')
 <div id="contribution-app" class="mx-auto max-w-2xl" data-user="{{ auth()->id() }}" data-generic="{{ auth()->check() && preg_match('/^(کاربر|User)(\s|$)/u', auth()->user()->name) ? '1' : '0' }}">

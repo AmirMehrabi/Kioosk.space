@@ -7,12 +7,15 @@
     <form action="{{ route('home') }}#places" class="panel mt-7 grid gap-3 sm:grid-cols-[1fr_1fr_auto]" role="search">
         <label>نام مکان<input class="field" name="query" type="search" value="{{ request('query') }}" placeholder="مثلاً کافه"></label>
         <x-city-select :cities="$cities" id="city-search" name="city" label="شهر" :value="request('city')" />
+        @if(request('category'))<input type="hidden" name="category" value="{{ request('category') }}">@endif
         <button class="button-primary self-end">جست‌وجو</button>
     </form>
 </section>
-<nav aria-label="دسته‌بندی‌ها" class="mb-10 flex flex-wrap gap-3">
-    <a class="button-secondary" href="{{ route('home') }}">همه مکان‌ها</a>
-    @foreach($categories as $category)<a class="button-secondary" href="{{ route('home', ['category' => $category->id]) }}">{{ $category->name }}</a>@endforeach
+<nav aria-label="دسته‌بندی‌ها" class="mb-10 flex gap-2 overflow-x-auto border-b border-border pb-3">
+    <a @class(['nav-link shrink-0 px-3', 'bg-pomegranate/5 text-pomegranate' => ! request('category')]) href="{{ route('home', request()->only('query', 'city')) }}#places" @unless(request('category')) aria-current="true" @endunless>همه مکان‌ها</a>
+    @foreach($categories as $category)
+        <a @class(['nav-link shrink-0 px-3', 'bg-pomegranate/5 text-pomegranate' => (string) request('category') === (string) $category->id]) href="{{ route('home', [...request()->only('query', 'city'), 'category' => $category->id]) }}#places" @if((string) request('category') === (string) $category->id) aria-current="true" @endif>{{ $category->name }}</a>
+    @endforeach
 </nav>
 <section id="places">
     <h2 class="mb-5 text-2xl font-bold">مکان‌های شهر</h2>

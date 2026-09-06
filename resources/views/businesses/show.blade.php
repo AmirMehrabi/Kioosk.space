@@ -1,4 +1,7 @@
 @extends('layouts.community')
+@section('breadcrumbs')
+    <x-breadcrumbs :items="[['label' => $business->name]]" />
+@endsection
 @section('title', $business->name)
 @section('content')
 <div class="grid gap-8 lg:grid-cols-[1fr_320px]">

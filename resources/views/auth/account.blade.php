@@ -1,6 +1,10 @@
-@extends('layouts.auth')
-@section('title', $portal === \App\Enums\Portal::Admin ? 'بخش مدیریت' : 'حساب کاربری')
+@extends('layouts.community')
+@section('title', $portal === \App\Enums\Portal::Business ? 'پرتال کسب‌وکار' : 'حساب کاربری')
+@section('breadcrumbs')
+    <x-breadcrumbs :items="[['label' => $portal === \App\Enums\Portal::Business ? 'پرتال کسب‌وکار' : 'حساب کاربری']]" />
+@endsection
 @section('content')
+<div class="panel mx-auto max-w-2xl">
     <a href="{{ route('contributions.index') }}" class="mb-5 flex min-h-11 items-center justify-center rounded-xl bg-pomegranate px-4 text-white">مشارکت‌های من</a>
     @if($portal === \App\Enums\Portal::Admin)<a href="{{ route('admin.submissions') }}" class="mb-5 block text-pomegranate">بررسی مشارکت‌ها و گزارش‌ها</a>@endif
     <span class="mb-5 flex size-12 items-center justify-center rounded-2xl bg-positive/10 text-2xl text-positive" aria-hidden="true">✓</span>
@@ -26,4 +30,5 @@
         @csrf
         <button type="submit" class="min-h-11 rounded-lg px-2 text-sm text-secondary hover:text-pomegranate focus-visible:outline-2 focus-visible:outline-pomegranate">خروج از حساب</button>
     </form>
+</div>
 @endsection

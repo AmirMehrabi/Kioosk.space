@@ -1,26 +1,36 @@
 @extends('layouts.community')
 
+@section('breadcrumbs')
+    @php
+        $breadcrumbs = [['label' => 'پرتال مدیریت', 'url' => route('admin.dashboard')]];
+        if (request()->routeIs('admin.submissions*')) {
+            $breadcrumbs[] = ['label' => 'مشارکت‌ها', 'url' => route('admin.submissions')];
+        } elseif (request()->routeIs('admin.reports*')) {
+            $breadcrumbs[] = ['label' => 'گزارش‌های محتوا'];
+        }
+        if (request()->routeIs('admin.submissions.show')) {
+            $breadcrumbs[] = ['label' => $business->name];
+        }
+    @endphp
+    <x-breadcrumbs :items="$breadcrumbs" />
+@endsection
+
 @section('content')
     <div class="grid gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]">
         <aside class="lg:sticky lg:top-5 lg:h-fit" aria-label="ناوبری مدیریت">
-            <div class="rounded-2xl border border-border bg-surface p-3 shadow-soft">
+            <div class="rounded-2xl border border-border/70 bg-surface p-3">
                 <div class="border-b border-border px-3 pb-4 pt-2">
                     <p class="text-xs font-semibold text-muted">پرتال مدیریت</p>
-                    <p class="mt-1 font-bold">{{ auth()->user()->name }}</p>
                 </div>
                 <nav class="mt-3 flex gap-2 overflow-x-auto lg:block lg:space-y-1" aria-label="بخش‌های مدیریت">
-                    <a @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('admin.dashboard')]) href="{{ route('admin.dashboard') }}">داشبورد</a>
-                    <a @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('admin.submissions*')]) href="{{ route('admin.submissions') }}">مشارکت‌ها</a>
-                    <a @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('admin.reports*')]) href="{{ route('admin.reports') }}">گزارش‌ها</a>
-                    <a class="admin-nav-item" href="{{ route('home') }}">مشاهده کیوسک</a>
+                    @foreach(['admin.dashboard' => 'داشبورد', 'admin.submissions' => 'مشارکت‌ها', 'admin.reports' => 'گزارش‌ها'] as $destination => $label)
+                        <a @class(['admin-nav-item shrink-0', 'admin-nav-item-active' => request()->routeIs($destination, $destination.'.*')]) href="{{ route($destination) }}" @if(request()->routeIs($destination, $destination.'.*')) aria-current="{{ request()->routeIs($destination) ? 'page' : 'location' }}" @endif>{{ $label }}</a>
+                    @endforeach
                 </nav>
-                <form action="{{ route('logout') }}" method="POST" class="mt-3 border-t border-border pt-3">
-                    @csrf
-                    <button type="submit" class="admin-nav-item w-full text-pomegranate hover:bg-pomegranate/5 hover:text-pomegranate">خروج از حساب</button>
-                </form>
+                <a class="nav-link mt-3 hidden w-full gap-2 border-t border-border pt-3 lg:flex" href="{{ route('home') }}">مشاهده کیوسک <span aria-hidden="true">←</span></a>
             </div>
         </aside>
 
-        <div>@yield('admin-content')</div>
+        <div class="min-w-0">@yield('admin-content')</div>
     </div>
 @endsection

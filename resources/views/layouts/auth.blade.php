@@ -13,16 +13,9 @@
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ink antialiased selection:bg-pomegranate selection:text-white">
     <div class="flex min-h-dvh flex-col">
-        <header class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-6 sm:px-8 sm:py-8">
-            <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="rounded-lg text-[28px] font-extrabold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pomegranate">کیوسک<span class="text-pomegranate">.</span></a>
-            @guest
-                <div class="mr-auto flex items-center gap-4 text-sm">
-                    <a href="{{ route('login') }}" class="font-semibold hover:text-pomegranate">ورود</a><span class="text-border">/</span><a href="{{ route('register') }}" class="font-semibold hover:text-pomegranate">ثبت‌نام</a>
-                </div>
-            @endguest
-            <a href="{{ route('home') }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-secondary hover:text-pomegranate focus-visible:outline-2 focus-visible:outline-pomegranate">بازگشت به خانه <span aria-hidden="true">←</span></a>
-        </header>
-        <main class="flex flex-1 flex-col items-center justify-center px-4 pb-12 pt-5 sm:px-6 sm:pb-20">
+        <a href="#main" class="sr-only focus:not-sr-only">رفتن به محتوای اصلی</a>
+        <x-navbar :minimal="true" :portal="$portal ?? null" />
+        <main id="main" class="flex flex-1 flex-col items-center justify-center px-4 pb-12 pt-5 sm:px-6 sm:pb-20">
             <div class="w-full max-w-[460px] rounded-3xl border border-border bg-surface p-6 shadow-soft sm:p-9">
                 @if (isset($portal))
                     <p class="mb-7 text-xs font-semibold text-muted">{{ $portal->label() }}</p>

@@ -1,4 +1,5 @@
 import './auth';
+import './navigation';
 import './city-select';
 import './contribute';
 

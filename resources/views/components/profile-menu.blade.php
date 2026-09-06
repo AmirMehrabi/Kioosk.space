@@ -13,7 +13,17 @@
             <span class="flex size-10 items-center justify-center rounded-full bg-pomegranate/10 font-extrabold text-pomegranate" aria-hidden="true">{{ $initial }}</span>
             <div class="min-w-0"><p class="truncate font-bold">{{ $user->name }}</p><p class="mt-1 text-xs text-muted">حساب کاربری کیوسک</p></div>
         </div>
-        <a href="{{ route('account') }}" class="mt-2 flex min-h-11 items-center rounded-xl px-3 text-sm font-semibold hover:bg-soft">حساب کاربری</a>
+        <nav class="my-2 space-y-1" aria-label="حساب و پرتال‌ها">
+            @foreach(['account' => $user->hasStaffAccess() ? 'پرتال کاربر' : 'حساب کاربری', 'contributions.index' => 'مشارکت‌های من'] as $destination => $label)
+                <a href="{{ route($destination) }}" @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs($destination)]) @if(request()->routeIs($destination)) aria-current="page" @endif>{{ $label }}</a>
+            @endforeach
+            @if($user->ownedBusinesses()->exists())
+                <a href="{{ route('business.dashboard') }}" @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('business.dashboard')]) @if(request()->routeIs('business.dashboard')) aria-current="page" @endif>پرتال کسب‌وکار</a>
+            @endif
+            @if($user->hasStaffAccess())
+                <a href="{{ route('admin.dashboard') }}" @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('admin.*')]) @if(request()->routeIs('admin.dashboard')) aria-current="page" @endif>پرتال مدیریت</a>
+            @endif
+        </nav>
         <form action="{{ route('logout') }}" method="POST" class="border-t border-border pt-2">
             @csrf
             <button type="submit" class="flex min-h-11 w-full items-center rounded-xl px-3 text-right text-sm font-semibold text-pomegranate hover:bg-pomegranate/5">خروج از حساب</button>

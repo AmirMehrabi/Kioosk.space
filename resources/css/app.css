@@ -37,9 +37,11 @@
     .panel { @apply rounded-2xl border border-border bg-surface p-5 sm:p-7; }
     .field-error { @apply mt-1 text-sm text-pomegranate; }
     .admin-nav-item { @apply flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-secondary transition hover:bg-soft hover:text-ink; }
-    .admin-nav-item-active { @apply bg-pomegranate text-white hover:bg-pomegranate-dark hover:text-white; }
+    .nav-link { @apply inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-secondary transition-colors hover:text-pomegranate motion-reduce:transition-none; }
+    .nav-link-active { @apply text-pomegranate; }
+    .admin-nav-item-active { @apply bg-pomegranate/5 text-pomegranate hover:bg-pomegranate/10 hover:text-pomegranate; }
     .admin-nav-count { @apply rounded-full bg-soft px-2 py-0.5 text-xs text-secondary; }
-    .admin-nav-item-active .admin-nav-count { @apply bg-white/15 text-white; }
+    .admin-nav-item-active .admin-nav-count { @apply bg-pomegranate/10 text-pomegranate; }
     .admin-stat-card { @apply rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-pomegranate/30; }
     .admin-stat-card span { @apply block text-sm font-semibold text-secondary; }
     .admin-stat-card strong { @apply mt-3 block text-3xl font-extrabold tabular-nums; }

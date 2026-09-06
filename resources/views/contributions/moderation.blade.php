@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 @section('title', 'بررسی مشارکت‌ها')
 @section('admin-content')
-<h1 class="mb-5 text-3xl font-bold">بررسی مشارکت‌ها</h1><a class="button-secondary mb-5" href="{{ route('admin.reports') }}">گزارش‌های محتوا</a>
+<h1 class="mb-5 text-3xl font-bold">بررسی مشارکت‌ها</h1>
 <div class="space-y-5">@forelse($businesses as $business)<article class="panel"><h2 class="text-xl font-bold">{{ $business->name }}</h2><p class="my-3">{{ $business->city }} · {{ $business->address }} · {{ ['pending'=>'در انتظار بررسی','corrections'=>'نیازمند اصلاح','incomplete'=>'اطلاعات ناقص','rejected'=>'ردشده'][$business->status] ?? $business->status }}</p>
 <a class="button-secondary mb-4" href="{{ route('admin.submissions.show', $business) }}">بررسی تجربه‌ها و عکس‌های مکان</a>
 <form class="grid gap-4 sm:grid-cols-2" method="post" action="{{ route('admin.submissions.update',$business) }}">@csrf
