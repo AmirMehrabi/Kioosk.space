@@ -258,8 +258,24 @@ class OtpAuthenticationTest extends TestCase
             ->assertSee('داشبورد')
             ->assertSee('در انتظار بررسی')
             ->assertSee('پرتال کاربر')
-            ->assertSee('پرتال کسب‌وکار')
             ->assertSee('پرتال مدیریت');
+    }
+
+    public function test_navigation_only_shows_the_business_portal_to_approved_owners_and_dashboard_on_admin_inner_pages(): void
+    {
+        $user = User::factory()->create(['mobile_verified_at' => now()]);
+        $this->actingAs($user)->get('/')->assertOk()->assertDontSee('پرتال کسب‌وکار');
+
+        $business = Business::factory()->create();
+        $business->owners()->attach($user, ['role' => 'owner', 'approved_at' => now()]);
+        $this->get('/')->assertOk()->assertSee('پرتال کسب‌وکار');
+
+        $admin = User::factory()->create(['mobile_verified_at' => now(), 'platform_role' => PlatformRole::Admin]);
+        $this->actingAs($admin)->withSession(['staff_auth' => ['user_id' => $admin->id, 'verified_at' => now()->timestamp]])
+            ->get('/admin/submissions')
+            ->assertOk()
+            ->assertSee('داشبورد')
+            ->assertSee(route('admin.dashboard'), false);
     }
 
     public function test_suspension_blocks_issued_codes_and_existing_sessions(): void

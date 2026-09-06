@@ -1,6 +1,6 @@
-@extends('layouts.community')
+@extends('layouts.admin')
 @section('title', 'گزارش‌های محتوا')
-@section('content')
+@section('admin-content')
 <h1 class="mb-5 text-3xl font-bold">گزارش‌های محتوا</h1><a class="button-secondary mb-5" href="{{ route('admin.submissions') }}">مشارکت‌ها</a>
 <div class="space-y-5">@forelse($reports as $report)<article class="panel"><h2 class="font-bold">{{ ['review'=>'تجربه','comment'=>'دیدگاه','owner_reply'=>'پاسخ مالک','media'=>'عکس'][$report->content_type] }} · {{ ['open'=>'باز','hide'=>'پنهان‌شده','restore'=>'بازگردانی‌شده','dismiss'=>'بسته‌شده'][$report->status] ?? $report->status }}</h2><p class="my-4 leading-7">{{ $report->reason }}</p>@php($content = $contents[$report->content_type][$report->content_id] ?? null)
 @if($content)<div class="mb-4 rounded-xl bg-soft p-4">@if($report->content_type === 'media')<img class="max-h-72 rounded-xl object-contain" src="{{ route('media.show', $report->content_id) }}" alt="عکس گزارش‌شده">@else<p class="whitespace-pre-wrap leading-8">{{ $content->body }}</p>@endif</div>@else<p class="mb-4 text-muted">محتوا حذف شده است.</p>@endif
