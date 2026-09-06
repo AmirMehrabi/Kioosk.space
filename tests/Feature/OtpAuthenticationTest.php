@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\LogSmsSender;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -368,5 +369,18 @@ class OtpAuthenticationTest extends TestCase
         $this->artisan('model:prune', ['--model' => [OtpChallenge::class]])->assertSuccessful();
         $this->assertDatabaseCount('otp_challenges', 1);
         $this->assertDatabaseHas('otp_challenges', ['mobile' => '+989123456788']);
+    }
+
+    public function test_inline_contribution_otp_rotates_csrf_and_returns_to_draft_without_exposing_phone(): void
+    {
+        $sms = $this->captureSms();
+        $this->get('/login?contribute=1')->assertOk();
+        $oldToken = session()->token();
+        $this->postJson('/login', ['mobile' => '۰۹۱۲۳۴۵۶۷۸۹'])->assertOk()->assertJsonPath('resend_after', 60);
+        $response = $this->postJson('/verify', ['code' => $sms->messages[0]['code']])->assertOk()->assertJsonPath('redirect', '/contribute')->assertJsonPath('needs_display_name', true);
+        $this->assertNotSame($oldToken, $response->json('csrf_token'));
+        $this->assertAuthenticated();
+        $response->assertDontSee('989123456789');
+        $this->postJson('/contribution-drafts', ['id' => (string) Str::uuid()])->assertOk();
     }
 }

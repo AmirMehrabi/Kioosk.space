@@ -1,0 +1,8 @@
+@extends('layouts.community')
+@section('title', 'گزارش‌های محتوا')
+@section('content')
+<h1 class="mb-5 text-3xl font-bold">گزارش‌های محتوا</h1><a class="button-secondary mb-5" href="{{ route('admin.submissions') }}">مشارکت‌ها</a>
+<div class="space-y-5">@forelse($reports as $report)<article class="panel"><h2 class="font-bold">{{ ['review'=>'تجربه','comment'=>'دیدگاه','owner_reply'=>'پاسخ مالک','media'=>'عکس'][$report->content_type] }} · {{ ['open'=>'باز','hide'=>'پنهان‌شده','restore'=>'بازگردانی‌شده','dismiss'=>'بسته‌شده'][$report->status] ?? $report->status }}</h2><p class="my-4 leading-7">{{ $report->reason }}</p>@php($content = $contents[$report->content_type][$report->content_id] ?? null)
+@if($content)<div class="mb-4 rounded-xl bg-soft p-4">@if($report->content_type === 'media')<img class="max-h-72 rounded-xl object-contain" src="{{ route('media.show', $report->content_id) }}" alt="عکس گزارش‌شده">@else<p class="whitespace-pre-wrap leading-8">{{ $content->body }}</p>@endif</div>@else<p class="mb-4 text-muted">محتوا حذف شده است.</p>@endif
+<form method="post" action="{{ route('admin.reports.update',$report->id) }}">@csrf<label>دلیل تصمیم<textarea class="field" name="reason" required minlength="3" maxlength="1000"></textarea></label><div class="mt-3 flex flex-wrap gap-2"><button class="button-secondary" name="action" value="hide">پنهان کردن</button><button class="button-secondary" name="action" value="restore">بازگردانی</button><button class="button-secondary" name="action" value="dismiss">بستن گزارش</button></div></form></article>@empty<p class="panel">گزارشی وجود ندارد.</p>@endforelse</div><div class="mt-5">{{ $reports->links() }}</div>
+@endsection

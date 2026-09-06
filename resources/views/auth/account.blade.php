@@ -1,6 +1,8 @@
 @extends('layouts.auth')
 @section('title', $portal === \App\Enums\Portal::Admin ? 'بخش مدیریت' : 'حساب کاربری')
 @section('content')
+    <a href="{{ route('contributions.index') }}" class="mb-5 flex min-h-11 items-center justify-center rounded-xl bg-pomegranate px-4 text-white">مشارکت‌های من</a>
+    @if($portal === \App\Enums\Portal::Admin)<a href="{{ route('admin.submissions') }}" class="mb-5 block text-pomegranate">بررسی مشارکت‌ها و گزارش‌ها</a>@endif
     <span class="mb-5 flex size-12 items-center justify-center rounded-2xl bg-positive/10 text-2xl text-positive" aria-hidden="true">✓</span>
     <h1 class="text-2xl font-bold">{{ $portal === \App\Enums\Portal::Admin ? 'به بخش مدیریت خوش آمدید' : 'خوش آمدید، '.auth()->user()->name }}</h1>
     <p class="mt-3 text-sm leading-7 text-secondary">شماره <bdi dir="ltr">{{ \App\Support\IranianMobile::display(auth()->user()->mobile) }}</bdi> تأیید شده است.</p>

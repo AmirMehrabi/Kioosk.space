@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Support\DemoBusinesses;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class BusinessPageTest extends TestCase
 {
+    use LazilyRefreshDatabase;
+
     public static function businesses(): array
     {
         return [['cafe-rira', 'کافه ری‌را'], ['restaurant-gilaneh', 'رستوران گیلانه'], ['bakery-sahar', 'نانوایی سحر']];
@@ -16,9 +20,10 @@ class BusinessPageTest extends TestCase
     #[DataProvider('businesses')]
     public function test_business_page_renders_gallery_information_and_review_controls(string $slug, string $name): void
     {
+        Business::factory()->create(['slug' => $slug, 'name' => $name]);
         $this->get('/businesses/'.$slug)->assertOk()->assertSee($name)->assertSee('lang="fa" dir="rtl"', false)
-            ->assertSee('گالری تصاویر')->assertSee('آدرس و اطلاعات تماس')->assertSee('امتیاز شما')->assertSee('گفت‌وگو')
-            ->assertSee('فقط در همین مرورگر');
+            ->assertSee('گالری تصاویر')->assertSee('آدرس و اطلاعات تماس')->assertSee('نوشتن تجربه من')->assertSee('تجربه‌های مردم')
+            ->assertDontSee('فقط در همین مرورگر');
     }
 
     public function test_unknown_business_returns_not_found(): void
@@ -28,6 +33,9 @@ class BusinessPageTest extends TestCase
 
     public function test_homepage_links_to_all_three_businesses(): void
     {
+        foreach (self::businesses() as [$slug, $name]) {
+            Business::factory()->create(['slug' => $slug, 'name' => $name]);
+        }
         $response = $this->get('/')->assertOk();
         foreach (self::businesses() as [$slug, $name]) {
             $response->assertSee(route('businesses.show', $slug), false);

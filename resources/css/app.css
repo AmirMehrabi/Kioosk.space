@@ -29,3 +29,11 @@
     .rating-progress::-webkit-progress-value { background: var(--color-pomegranate); border-radius: 999px; }
     .rating-progress::-moz-progress-bar { background: var(--color-pomegranate); border-radius: 999px; }
 }
+
+@layer components {
+    .button-primary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-pomegranate px-5 py-3 text-sm font-bold text-white hover:bg-pomegranate-dark disabled:opacity-50; }
+    .button-secondary { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-sm hover:bg-soft disabled:opacity-50; }
+    .field { @apply mt-2 block min-h-12 w-full rounded-xl border border-border bg-surface px-4 py-3 text-base; }
+    .panel { @apply rounded-2xl border border-border bg-surface p-5 sm:p-7; }
+    .field-error { @apply mt-1 text-sm text-pomegranate; }
+}

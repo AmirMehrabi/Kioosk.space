@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Services\OtpService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,13 +24,20 @@ class OtpController extends Controller
 
     public function create(Request $request): View
     {
+        if ($this->portal($request) === Portal::Public && $request->boolean('contribute')) {
+            $request->session()->put('contribution_destination', '/contribute');
+        }
+
         return view('auth.login', ['portal' => $this->portal($request)]);
     }
 
-    public function store(SendOtpRequest $request): RedirectResponse
+    public function store(SendOtpRequest $request): RedirectResponse|JsonResponse
     {
         $portal = $this->portal($request);
         $this->otp->send($request, $portal, $request->validated('mobile'));
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'در صورت مجاز بودن ورود، کد برای این شماره ارسال می‌شود.', 'resend_after' => 60]);
+        }
 
         return redirect()->route($portal->route('verify'))->with('status', 'در صورت مجاز بودن ورود، کد برای این شماره ارسال می‌شود.');
     }
@@ -57,10 +65,11 @@ class OtpController extends Controller
         return redirect()->route($portal->route('verify'))->with('status', 'در صورت مجاز بودن ورود، کد جدید ارسال می‌شود. فقط آخرین کد معتبر است.');
     }
 
-    public function verify(VerifyOtpRequest $request): RedirectResponse
+    public function verify(VerifyOtpRequest $request): RedirectResponse|JsonResponse
     {
         $portal = $this->portal($request);
         $user = $this->otp->verify($request, $portal, $request->validated('code'));
+        $destination = $portal === Portal::Public && $request->session()->get('contribution_destination') === '/contribute' ? '/contribute' : null;
         $request->session()->invalidate();
         Auth::login($user);
         $request->session()->regenerate();
@@ -69,7 +78,11 @@ class OtpController extends Controller
             $request->session()->put('staff_auth', ['user_id' => $user->id, 'verified_at' => now()->timestamp]);
         }
 
-        return redirect()->route($portal->destination());
+        if ($request->expectsJson()) {
+            return response()->json(['user_id' => $user->id, 'needs_display_name' => (bool) preg_match('/^(کاربر|User)(\s|$)/u', $user->name), 'csrf_token' => $request->session()->token(), 'redirect' => $destination ?? route($portal->destination())]);
+        }
+
+        return $destination ? redirect($destination) : redirect()->route($portal->destination());
     }
 
     public function destroy(Request $request): RedirectResponse
