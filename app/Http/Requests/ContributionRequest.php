@@ -24,7 +24,7 @@ class ContributionRequest extends FormRequest
             'correction_business_id' => ['nullable', 'integer'],
             'name' => [$required, 'nullable', 'string', 'max:180'],
             'category_id' => [$required, 'nullable', 'integer', 'exists:categories,id'],
-            'city' => [$required, 'nullable', 'string', 'max:100'],
+            'city' => [$required, 'nullable', 'string', 'exists:cities,name'],
             'address' => [$required, 'nullable', 'string', 'max:500'],
             'phone' => ['nullable', 'string', 'max:40', 'regex:/^[+۰-۹٠-٩0-9()\s-]+$/u'],
             'website' => ['nullable', 'url:http,https', 'max:500'],

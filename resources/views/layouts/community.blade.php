@@ -26,10 +26,16 @@
             </div>
         @else
             <div class="mr-auto flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm">
-                <a class="font-semibold hover:text-pomegranate" href="{{ route('account') }}">پرتال کاربر</a>
-                <a class="font-semibold hover:text-pomegranate" href="{{ route('contributions.index') }}">مشارکت‌های من</a>
-                @if($hasBusinessPortal)<a class="font-semibold hover:text-pomegranate" href="{{ route('business.dashboard') }}">پرتال کسب‌وکار</a>@endif
-                @if(auth()->user()->hasStaffAccess())<a class="font-semibold text-pomegranate hover:text-pomegranate-dark" href="{{ route('admin.dashboard') }}">پرتال مدیریت</a>@endif
+                @if(auth()->user()->hasStaffAccess())
+                    <a class="font-semibold hover:text-pomegranate" href="{{ route('account') }}">پرتال کاربر</a>
+                    <a class="font-semibold hover:text-pomegranate" href="{{ route('contributions.index') }}">مشارکت‌های من</a>
+                    @if($hasBusinessPortal)<a class="font-semibold hover:text-pomegranate" href="{{ route('business.dashboard') }}">پرتال کسب‌وکار</a>@endif
+                    <a class="font-semibold text-pomegranate hover:text-pomegranate-dark" href="{{ route('admin.dashboard') }}">پرتال مدیریت</a>
+                @else
+                    <x-profile-menu :user="auth()->user()" />
+                    <a class="font-semibold hover:text-pomegranate" href="{{ route('contributions.index') }}">مشارکت‌های من</a>
+                    @if($hasBusinessPortal)<a class="font-semibold hover:text-pomegranate" href="{{ route('business.dashboard') }}">پرتال کسب‌وکار</a>@endif
+                @endif
                 <a href="{{ route('contribute') }}" class="button-primary text-center">افزودن مکان یا نوشتن نظر</a>
             </div>
         @endguest

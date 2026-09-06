@@ -278,6 +278,31 @@ class OtpAuthenticationTest extends TestCase
             ->assertSee(route('admin.dashboard'), false);
     }
 
+    public function test_normal_user_nav_has_a_profile_menu_with_avatar_account_and_logout(): void
+    {
+        $user = User::factory()->create(['name' => 'نگار رضایی', 'mobile_verified_at' => now()]);
+
+        $this->actingAs($user)->get('/')
+            ->assertOk()
+            ->assertSee('نگار رضایی')
+            ->assertSee('باز کردن منوی حساب کاربری')
+            ->assertSee('حساب کاربری')
+            ->assertSee('خروج از حساب')
+            ->assertSee(route('account'), false)
+            ->assertSee(route('logout'), false);
+    }
+
+    public function test_admin_sidebar_has_a_logout_action(): void
+    {
+        $admin = User::factory()->create(['mobile_verified_at' => now(), 'platform_role' => PlatformRole::Admin]);
+
+        $this->actingAs($admin)->withSession(['staff_auth' => ['user_id' => $admin->id, 'verified_at' => now()->timestamp]])
+            ->get('/admin/dashboard')
+            ->assertOk()
+            ->assertSee('خروج از حساب')
+            ->assertSee(route('logout'), false);
+    }
+
     public function test_suspension_blocks_issued_codes_and_existing_sessions(): void
     {
         $sms = $this->captureSms();

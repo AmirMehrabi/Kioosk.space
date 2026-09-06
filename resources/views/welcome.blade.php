@@ -6,7 +6,7 @@
     <p class="mt-5 max-w-2xl leading-8 text-secondary">رستوران، کافه، فروشگاه یا هر جای دیگری را در سراسر ایران با کمک تجربه واقعی آدم‌های شهر پیدا کنید.</p>
     <form action="{{ route('home') }}#places" class="panel mt-7 grid gap-3 sm:grid-cols-[1fr_1fr_auto]" role="search">
         <label>نام مکان<input class="field" name="query" type="search" value="{{ request('query') }}" placeholder="مثلاً کافه"></label>
-        <label>شهر<input class="field" name="city" type="search" value="{{ request('city') }}" placeholder="همه شهرهای ایران"></label>
+        <x-city-select :cities="$cities" id="city-search" name="city" label="شهر" :value="request('city')" />
         <button class="button-primary self-end">جست‌وجو</button>
     </form>
 </section>

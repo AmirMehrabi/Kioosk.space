@@ -16,7 +16,7 @@
         <section data-step="1" class="panel space-y-5">
             <h2 class="text-xl font-bold" tabindex="-1">اول مکان را پیدا کنید</h2>
             <label class="block">نام مکان<input class="field" id="search-name" type="search" maxlength="180" autocomplete="off"></label>
-            <label class="block">شهر<input class="field" id="search-city" list="cities" maxlength="100" autocomplete="address-level2"></label>
+            <x-city-select :cities="$cities" id="search-city" name="search_city" label="شهر" />
             <div class="flex flex-wrap gap-3"><button type="button" id="search-businesses" class="button-primary">جست‌وجوی مکان</button><button type="button" id="locate" class="button-secondary">استفاده از موقعیت من</button></div>
             <p id="gps-status" class="text-sm text-muted" role="status">موقعیت فقط با درخواست شما دریافت می‌شود.</p>
             <div id="search-results" class="space-y-3" aria-live="polite"></div>
@@ -27,7 +27,7 @@
             <h2 class="text-xl font-bold" tabindex="-1">اطلاعات مکان جدید</h2>
             <label class="block">نام مکان <span class="text-pomegranate">*</span><input class="field" name="name" maxlength="180"><span class="field-error" data-error="name"></span></label>
             <label class="block">دسته‌بندی <span class="text-pomegranate">*</span><select class="field" name="category_id"><option value="">انتخاب کنید</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select><span class="field-error" data-error="category_id"></span></label>
-            <label class="block">شهر <span class="text-pomegranate">*</span><input class="field" name="city" list="cities" maxlength="100"><span class="text-xs text-muted">نام هر شهر ایران را می‌توانید وارد کنید.</span><span class="field-error" data-error="city"></span></label>
+            <x-city-select :cities="$cities" id="city" name="city" label="شهر" required hint="شهر خود را از فهرست انتخاب کنید."><span class="field-error" data-error="city"></span></x-city-select>
             <label class="block">آدرس کوتاه <span class="text-pomegranate">*</span><input class="field" name="address" maxlength="500"><span class="field-error" data-error="address"></span></label>
             <details><summary class="cursor-pointer py-3 text-secondary">اطلاعات اختیاری؛ تماس و ساعت کار</summary><div class="space-y-4 pt-3">
                 <label class="block">تلفن<input class="field" name="phone" type="tel" maxlength="40" dir="ltr"><span class="field-error" data-error="phone"></span></label>
@@ -68,7 +68,6 @@
     </form>
     <div id="contribution-success" class="panel" hidden><h2 id="success-heading" class="text-2xl font-bold"></h2><p id="success-copy" class="my-4 leading-8"></p><a id="success-link" class="button-primary">مشاهده مشارکت</a><a href="{{ route('contribute', ['new' => 1]) }}" class="button-secondary mt-3">مشارکت تازه</a></div>
     <noscript><p class="panel">برای حفظ عکس‌ها و پیش‌نویس، جاوااسکریپت مرورگر را فعال کنید.</p></noscript>
-    <datalist id="cities">@foreach($cities as $city)<option value="{{ $city }}">@endforeach</datalist>
     <dialog id="jalali-calendar" class="m-auto w-[min(95vw,420px)] rounded-2xl border border-border bg-surface p-5 backdrop:bg-ink/40">
         <h2 class="text-lg font-bold">انتخاب تاریخ بازدید</h2><div class="my-4 grid grid-cols-2 gap-3"><label>سال<select id="calendar-year" class="field"></select></label><label>ماه<select id="calendar-month" class="field"></select></label></div><div id="calendar-days" class="grid grid-cols-7 gap-1"></div><button type="button" id="close-calendar" class="button-secondary mt-4">بستن</button>
     </dialog>

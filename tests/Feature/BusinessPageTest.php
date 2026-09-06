@@ -42,6 +42,16 @@ class BusinessPageTest extends TestCase
         }
     }
 
+    public function test_city_search_is_backed_by_the_managed_city_list(): void
+    {
+        $this->get('/')->assertOk()->assertSee('role="combobox"', false)->assertSee('شاهین‌شهر')->assertSee('بندر انزلی');
+        $this->get('/?city=ناشناخته')->assertRedirect()->assertSessionHasErrors('city');
+
+        $this->artisan('kioosk:city', ['name' => 'یزد'])->assertSuccessful();
+        $this->assertDatabaseHas('cities', ['name' => 'یزد']);
+        $this->get('/')->assertOk()->assertSee('یزد');
+    }
+
     public function test_demo_rating_and_assets_match_the_business_data(): void
     {
         foreach (self::businesses() as [$slug, $name]) {

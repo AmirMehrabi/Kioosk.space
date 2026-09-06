@@ -1,4 +1,5 @@
 import './auth';
+import './city-select';
 import './contribute';
 
 document.querySelectorAll('[data-discard-draft]').forEach(button => button.addEventListener('click', async () => {

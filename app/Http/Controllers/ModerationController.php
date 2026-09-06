@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\City;
 use App\Models\ContributionDraft;
 use App\Models\Media;
 use App\Models\Review;
@@ -23,7 +24,7 @@ class ModerationController extends Controller
 {
     public function index(): View
     {
-        return view('contributions.moderation', ['businesses' => Business::whereIn('status', ['pending', 'corrections', 'incomplete', 'rejected'])->latest()->paginate(15), 'categories' => DB::table('categories')->get()]);
+        return view('contributions.moderation', ['businesses' => Business::whereIn('status', ['pending', 'corrections', 'incomplete', 'rejected'])->latest()->paginate(15), 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
     }
 
     public function show(Business $business): View
@@ -44,7 +45,7 @@ class ModerationController extends Controller
             $userIds = Review::withTrashed()->where('business_id', $business->id)->pluck('user_id')->push($business->contributor_id)->filter()->unique();
             abort_if($business->merged_into_id, 409);
             if ($data['action'] === 'edit') {
-                $fields = $request->validate(['name' => ['required', 'string', 'max:180'], 'category_id' => ['required', 'exists:categories,id'], 'city' => ['required', 'string', 'max:100'], 'address' => ['required', 'string', 'max:500'], 'phone' => ['nullable', 'string', 'max:40'], 'website' => ['nullable', 'url:http,https', 'max:500'], 'opening_hours' => ['nullable', 'string', 'max:1000']]);
+                $fields = $request->validate(['name' => ['required', 'string', 'max:180'], 'category_id' => ['required', 'exists:categories,id'], 'city' => ['required', 'string', 'exists:cities,name'], 'address' => ['required', 'string', 'max:500'], 'phone' => ['nullable', 'string', 'max:40'], 'website' => ['nullable', 'url:http,https', 'max:500'], 'opening_hours' => ['nullable', 'string', 'max:1000']]);
                 $fingerprint = BusinessIdentity::fingerprint($fields);
                 abort_if(Business::where('fingerprint', $fingerprint)->whereKeyNot($business->id)->exists(), 409, 'مکان تکراری است؛ از ادغام استفاده کنید.');
                 $business->update($service->businessData($fields) + ['fingerprint' => $fingerprint, 'slug' => $business->slug ?? (string) Str::uuid()]);

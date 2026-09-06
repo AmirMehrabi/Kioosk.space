@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\City;
 use App\Models\Review;
 use App\Support\BusinessIdentity;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,15 +16,15 @@ class BusinessController extends Controller
 {
     public function index(Request $request): View
     {
-        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'max:100'], 'category' => ['nullable', 'integer']]);
+        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer']]);
         $businesses = $this->searchQuery($request)->with(['photos' => fn ($q) => $q->limit(1)])->withCount('reviews')->withAvg('reviews', 'rating')->latest('businesses.id')->paginate(12)->withQueryString();
 
-        return view('welcome', ['businesses' => $businesses, 'categories' => DB::table('categories')->get()]);
+        return view('welcome', ['businesses' => $businesses, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
     }
 
     public function search(Request $request): JsonResponse
     {
-        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'max:100'], 'latitude' => ['nullable', 'numeric', 'between:24,41'], 'longitude' => ['nullable', 'numeric', 'between:43,64']]);
+        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'latitude' => ['nullable', 'numeric', 'between:24,41'], 'longitude' => ['nullable', 'numeric', 'between:43,64']]);
         $query = $this->searchQuery($request)->with(['photos' => fn ($q) => $q->limit(1)]);
         if ($request->filled(['latitude', 'longitude'])) {
             $query->orderByRaw('(COALESCE(latitude, 0) - ?) * (COALESCE(latitude, 0) - ?) + (COALESCE(longitude, 0) - ?) * (COALESCE(longitude, 0) - ?)', [$request->input('latitude'), $request->input('latitude'), $request->input('longitude'), $request->input('longitude')]);

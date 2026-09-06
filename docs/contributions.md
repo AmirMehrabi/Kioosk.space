@@ -52,6 +52,12 @@ OTP delivery intentionally remains log-only in the private daily `sms` log chann
 
 Existing business records are retained as incomplete until administrators fill mandatory fields. There is no automatic import of browser demo reviews. The optional `DemoBusinessSeeder` requires `APP_ENV=local` or `testing` and `KIOOSK_DEMO=true`; keep it disabled for real data.
 
+Cities are managed in the `cities` table and appear as searchable selects across search and business forms. Add a city with:
+
+```sh
+php artisan kioosk:city "یزد"
+```
+
 ```sh
 php artisan test --compact
 npm run build

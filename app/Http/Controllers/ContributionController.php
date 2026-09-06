@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ContributionRequest;
 use App\Models\Business;
+use App\Models\City;
 use App\Models\ContributionDraft;
 use App\Models\Review;
 use App\Services\SubmitContribution;
@@ -34,7 +35,7 @@ class ContributionController extends Controller
             }
         }
 
-        return view('contributions.create', ['initial' => $initial, 'categories' => DB::table('categories')->get(), 'cities' => Business::where('status', 'approved')->select('city')->distinct()->orderBy('city')->limit(500)->pluck('city')]);
+        return view('contributions.create', ['initial' => $initial, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
     }
 
     public function index(Request $request): View

@@ -35,7 +35,7 @@ class ContributionTest extends TestCase
         $id = (string) Str::uuid();
         $this->actingAs($user)->postJson('/contribution-drafts', ['id' => $id])->assertOk()->assertJsonPath('version', 1)->assertJsonPath('status', 'draft');
         $this->putJson('/contribution-drafts/'.$id, $payload + [
-            'version' => 1, 'name' => 'کافه آفتاب', 'city' => 'شیراز', 'address' => 'خیابان حافظ، پلاک ۱۲', 'category_id' => 1,
+            'version' => 1, 'name' => 'کافه آفتاب', 'city' => 'تهران', 'address' => 'خیابان حافظ، پلاک ۱۲', 'category_id' => 1,
             'with_review' => true, 'rating' => 4, 'body' => 'محیط آرام و برخورد بسیار خوبی داشتند.', 'photo_ids' => [],
         ])->assertOk();
 
@@ -104,7 +104,7 @@ class ContributionTest extends TestCase
 
     public function test_fuzzy_match_requires_confirmation_but_separate_branch_can_be_added(): void
     {
-        Business::factory()->create(['name' => 'کافه آفتاب', 'normalized_name' => 'کافه آفتاب', 'city' => 'شیراز', 'normalized_city' => 'شیراز']);
+        Business::factory()->create(['name' => 'کافه آفتاب', 'normalized_name' => 'کافه آفتاب', 'city' => 'تهران', 'normalized_city' => 'تهران']);
         $draft = $this->draft($this->contributor());
         $this->postJson('/contribution-drafts/'.$draft->id.'/submit')->assertUnprocessable()->assertJsonValidationErrors('confirm_distinct');
         $this->putJson('/contribution-drafts/'.$draft->id, $draft->payload + ['version' => 2, 'confirm_distinct' => true])->assertOk();

@@ -14,6 +14,10 @@
                     <a @class(['admin-nav-item', 'admin-nav-item-active' => request()->routeIs('admin.reports*')]) href="{{ route('admin.reports') }}">گزارش‌ها</a>
                     <a class="admin-nav-item" href="{{ route('home') }}">مشاهده کیوسک</a>
                 </nav>
+                <form action="{{ route('logout') }}" method="POST" class="mt-3 border-t border-border pt-3">
+                    @csrf
+                    <button type="submit" class="admin-nav-item w-full text-pomegranate hover:bg-pomegranate/5 hover:text-pomegranate">خروج از حساب</button>
+                </form>
             </div>
         </aside>
 
