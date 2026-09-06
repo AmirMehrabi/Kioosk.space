@@ -13,8 +13,13 @@
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ink antialiased selection:bg-pomegranate selection:text-white">
     <div class="flex min-h-dvh flex-col">
-        <header class="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-6 sm:px-8 sm:py-8">
+        <header class="relative mx-auto grid w-full max-w-6xl grid-cols-[1fr_auto] items-center gap-3 px-5 py-6 sm:grid-cols-[1fr_auto_1fr] sm:px-8 sm:py-8">
             <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="rounded-lg text-[28px] font-extrabold focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pomegranate">کیوسک<span class="text-pomegranate">.</span></a>
+            @guest
+                <div class="col-span-2 row-start-2 flex items-center justify-center gap-4 text-sm sm:col-span-1 sm:row-start-1">
+                    <a href="{{ route('login') }}" class="font-semibold hover:text-pomegranate">ورود</a><span class="text-border">/</span><a href="{{ route('register') }}" class="font-semibold hover:text-pomegranate">ثبت‌نام</a>
+                </div>
+            @endguest
             <a href="{{ route('home') }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-secondary hover:text-pomegranate focus-visible:outline-2 focus-visible:outline-pomegranate">بازگشت به خانه <span aria-hidden="true">←</span></a>
         </header>
         <main class="flex flex-1 flex-col items-center justify-center px-4 pb-12 pt-5 sm:px-6 sm:pb-20">

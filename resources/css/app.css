@@ -36,4 +36,13 @@
     .field { @apply mt-2 block min-h-12 w-full rounded-xl border border-border bg-surface px-4 py-3 text-base; }
     .panel { @apply rounded-2xl border border-border bg-surface p-5 sm:p-7; }
     .field-error { @apply mt-1 text-sm text-pomegranate; }
+    .admin-nav-item { @apply flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-secondary transition hover:bg-soft hover:text-ink; }
+    .admin-nav-item-active { @apply bg-pomegranate text-white hover:bg-pomegranate-dark hover:text-white; }
+    .admin-nav-count { @apply rounded-full bg-soft px-2 py-0.5 text-xs text-secondary; }
+    .admin-nav-item-active .admin-nav-count { @apply bg-white/15 text-white; }
+    .admin-stat-card { @apply rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-pomegranate/30; }
+    .admin-stat-card span { @apply block text-sm font-semibold text-secondary; }
+    .admin-stat-card strong { @apply mt-3 block text-3xl font-extrabold tabular-nums; }
+    .admin-stat-card small { @apply mt-1 block text-xs text-muted; }
+    .admin-status { @apply shrink-0 rounded-full bg-soft px-2.5 py-1 text-xs font-semibold text-secondary; }
 }

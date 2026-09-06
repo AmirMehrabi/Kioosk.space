@@ -247,6 +247,21 @@ class OtpAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    #[DataProvider('staffRoles')]
+    public function test_admin_dashboard_shows_moderation_work_and_role_aware_portals(PlatformRole $role): void
+    {
+        $admin = User::factory()->create(['mobile_verified_at' => now(), 'platform_role' => $role]);
+        Business::factory()->create(['status' => 'pending']);
+        $this->actingAs($admin)->withSession(['staff_auth' => ['user_id' => $admin->id, 'verified_at' => now()->timestamp]])
+            ->get('/admin/dashboard')
+            ->assertOk()
+            ->assertSee('داشبورد')
+            ->assertSee('در انتظار بررسی')
+            ->assertSee('پرتال کاربر')
+            ->assertSee('پرتال کسب‌وکار')
+            ->assertSee('پرتال مدیریت');
+    }
+
     public function test_suspension_blocks_issued_codes_and_existing_sessions(): void
     {
         $sms = $this->captureSms();

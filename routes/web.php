@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Portal;
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\ContributionController;
@@ -68,5 +69,5 @@ Route::middleware(AuthResponseHeaders::class)->group(function () {
     Route::post('/logout', [OtpController::class, 'destroy'])->block(10, 5)->name('logout');
     Route::get('/account', PortalController::class)->defaults('portal', 'public')->middleware(EnsurePortalAccess::class.':public')->name('account');
     Route::get('/business/dashboard', PortalController::class)->defaults('portal', 'business')->middleware(EnsurePortalAccess::class.':business')->name('business.dashboard');
-    Route::get('/admin/dashboard', PortalController::class)->defaults('portal', 'admin')->middleware(EnsurePortalAccess::class.':admin')->name('admin.dashboard');
+    Route::get('/admin/dashboard', AdminDashboardController::class)->middleware(EnsurePortalAccess::class.':admin')->name('admin.dashboard');
 });
