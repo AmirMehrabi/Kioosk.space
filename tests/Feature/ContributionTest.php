@@ -59,6 +59,8 @@ class ContributionTest extends TestCase
         $draft = $this->draft($user, ['photo_ids' => [$client]]);
         $photo = $this->postJson('/contribution-drafts/'.$draft->id.'/photos', ['client_id' => $client, 'photo' => UploadedFile::fake()->image('photo.jpg', 300, 200)])->assertCreated()->json('id');
         $this->postJson('/contribution-drafts/'.$draft->id.'/photos', ['client_id' => $client, 'photo' => UploadedFile::fake()->image('photo.jpg', 300, 200)])->assertOk()->assertJsonPath('id', $photo);
+        Storage::disk('local')->assertExists(Media::findOrFail($photo)->thumbnail_path);
+        $this->assertSame('image/jpeg', (new \finfo(FILEINFO_MIME_TYPE))->file(Storage::disk('local')->path(Media::findOrFail($photo)->path)));
 
         $result = $this->postJson('/contribution-drafts/'.$draft->id.'/submit')->assertOk()->assertJsonPath('status', 'pending')->json();
         $this->postJson('/contribution-drafts/'.$draft->id.'/submit')->assertOk()->assertExactJson($result);

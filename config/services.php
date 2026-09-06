@@ -22,6 +22,14 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'kavenegar' => [
+        'api_key' => env('KAVENEGAR_API_KEY'),
+        'template' => env('KAVENEGAR_OTP_TEMPLATE'),
+        'base_url' => env('KAVENEGAR_BASE_URL', 'https://api.kavenegar.com'),
+        'connect_timeout' => env('KAVENEGAR_CONNECT_TIMEOUT', 5),
+        'timeout' => env('KAVENEGAR_TIMEOUT', 10),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

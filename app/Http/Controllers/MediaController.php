@@ -35,7 +35,16 @@ class MediaController extends Controller
             if ($width * $height > 20000000) {
                 throw ValidationException::withMessages(['photo' => 'ابعاد عکس بیش از حد بزرگ است؛ نسخه کوچک‌تری انتخاب کنید.']);
             }
-            $source = @imagecreatefromstring(file_get_contents($file->getRealPath()));
+            $decoder = match ($file->getMimeType()) {
+                'image/jpeg' => 'imagecreatefromjpeg',
+                'image/png' => 'imagecreatefrompng',
+                'image/webp' => 'imagecreatefromwebp',
+                default => null,
+            };
+            if (! $decoder || ! function_exists($decoder)) {
+                throw ValidationException::withMessages(['photo' => 'پردازش این نوع عکس روی سرور فعال نیست.']);
+            }
+            $source = @$decoder($file->getRealPath());
             if (! $source) {
                 throw ValidationException::withMessages(['photo' => 'محتوای عکس معتبر نیست. عکس JPEG، PNG یا WebP انتخاب کنید.']);
             }

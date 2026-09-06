@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class OtpService
 {
-    public function __construct(private LogSmsSender $sms) {}
+    public function __construct(private KavenegarSmsSender $sms) {}
 
     public function current(Request $request, Portal $portal): ?OtpChallenge
     {

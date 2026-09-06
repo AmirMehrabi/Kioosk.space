@@ -6,7 +6,7 @@ use App\Enums\PlatformRole;
 use App\Models\Business;
 use App\Models\OtpChallenge;
 use App\Models\User;
-use App\Services\LogSmsSender;
+use App\Services\KavenegarSmsSender;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -19,7 +19,7 @@ class OtpAuthenticationTest extends TestCase
 
     private function captureSms(): object
     {
-        $capture = new class extends LogSmsSender
+        $capture = new class extends KavenegarSmsSender
         {
             public array $messages = [];
 
@@ -28,7 +28,7 @@ class OtpAuthenticationTest extends TestCase
                 $this->messages[] = compact('mobile', 'code');
             }
         };
-        $this->app->instance(LogSmsSender::class, $capture);
+        $this->app->instance(KavenegarSmsSender::class, $capture);
 
         return $capture;
     }
@@ -337,13 +337,6 @@ class OtpAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_log_delivery_uses_only_the_dedicated_sms_channel(): void
-    {
-        Log::shouldReceive('channel')->once()->with('sms')->andReturnSelf();
-        Log::shouldReceive('info')->once()->with('پیامک ورود کیوسک', \Mockery::on(fn (array $context): bool => $context['to'] === '+989123456789' && str_contains($context['message'], '01234')));
-        app(LogSmsSender::class)->send('+989123456789', '01234');
-    }
-
     public function test_staff_provisioning_is_explicit_and_still_requires_mobile_verification(): void
     {
         $this->artisan('kioosk:staff', ['mobile' => '۰۹۱۲۳۴۵۶۷۸۹', '--role' => 'superadmin', '--name' => 'مدیر کیوسک'])->assertSuccessful();
@@ -361,7 +354,7 @@ class OtpAuthenticationTest extends TestCase
 
     public function test_sms_failure_does_not_leave_a_usable_challenge(): void
     {
-        $this->mock(LogSmsSender::class)->shouldReceive('send')->once()->andThrow(new \RuntimeException('transport failed'));
+        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new \RuntimeException('transport failed'));
         Log::shouldReceive('error')->once()->with('OTP delivery failed', ['exception_type' => \RuntimeException::class]);
         $this->post('/login', ['mobile' => '09123456789'])->assertSessionHasErrors(['mobile' => 'ارسال کد انجام نشد. کمی بعد دوباره تلاش کنید.'])->assertSessionMissing('otp.public');
         $this->assertDatabaseCount('otp_challenges', 0);
