@@ -2,10 +2,12 @@
 
 namespace Tests\Unit\Services;
 
+use App\Exceptions\KavenegarSmsException;
+use App\Services\KavenegarApiFactory;
 use App\Services\KavenegarSmsSender;
-use Illuminate\Http\Client\Request;
-use Illuminate\Support\Facades\Http;
-use RuntimeException;
+use Kavenegar\Exceptions\ApiException;
+use Kavenegar\KavenegarApi;
+use Mockery;
 use Tests\TestCase;
 
 class KavenegarSmsSenderTest extends TestCase
@@ -15,28 +17,12 @@ class KavenegarSmsSenderTest extends TestCase
         config()->set([
             'services.kavenegar.api_key' => 'test-api-key',
             'services.kavenegar.template' => 'login-code',
-            'services.kavenegar.base_url' => 'https://api.kavenegar.com',
-            'services.kavenegar.connect_timeout' => 2,
-            'services.kavenegar.timeout' => 4,
         ]);
-        Http::preventStrayRequests();
-        Http::fake([
-            'https://api.kavenegar.com/v1/test-api-key/verify/lookup.json' => Http::response([
-                'return' => ['status' => 200, 'message' => 'تایید شد'],
-                'entries' => [['messageid' => 123]],
-            ]),
-        ]);
+        $api = Mockery::mock(KavenegarApi::class);
+        $api->shouldReceive('VerifyLookup')->once()->with('09123456789', '01234', null, null, 'login-code')->andReturn([(object) ['messageid' => 123]]);
+        $this->mock(KavenegarApiFactory::class)->shouldReceive('create')->once()->with('test-api-key')->andReturn($api);
 
         app(KavenegarSmsSender::class)->send('+989123456789', '01234');
-
-        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.kavenegar.com/v1/test-api-key/verify/lookup.json'
-            && $request->method() === 'POST'
-            && $request->hasHeader('Content-Type', 'application/x-www-form-urlencoded')
-            && $request->data() === [
-                'receptor' => '09123456789',
-                'token' => '01234',
-                'template' => 'login-code',
-            ]);
     }
 
     public function test_lookup_rejects_an_unsuccessful_api_result(): void
@@ -44,21 +30,18 @@ class KavenegarSmsSenderTest extends TestCase
         config()->set([
             'services.kavenegar.api_key' => 'test-api-key',
             'services.kavenegar.template' => 'login-code',
-            'services.kavenegar.base_url' => 'https://api.kavenegar.com',
-            'services.kavenegar.connect_timeout' => 2,
-            'services.kavenegar.timeout' => 4,
         ]);
-        Http::preventStrayRequests();
-        Http::fake([
-            'https://api.kavenegar.com/v1/test-api-key/verify/lookup.json' => Http::response([
-                'return' => ['status' => 431, 'message' => 'ساختار کد صحیح نمی باشد'],
-                'entries' => null,
-            ]),
-        ]);
+        $api = Mockery::mock(KavenegarApi::class);
+        $api->shouldReceive('VerifyLookup')->once()->andThrow(new ApiException('ساختار کد صحیح نمی باشد', 431));
+        $this->mock(KavenegarApiFactory::class)->shouldReceive('create')->once()->with('test-api-key')->andReturn($api);
 
-        $this->expectException(RuntimeException::class);
-
-        app(KavenegarSmsSender::class)->send('+989123456789', '01234');
+        try {
+            app(KavenegarSmsSender::class)->send('+989123456789', '01234');
+            $this->fail('An unsuccessful Kavenegar result was accepted.');
+        } catch (KavenegarSmsException $exception) {
+            $this->assertSame('Kavenegar rejected the OTP delivery request.', $exception->getMessage());
+            $this->assertSame(431, $exception->providerStatus());
+        }
     }
 
     public function test_lookup_does_not_send_without_required_configuration(): void
@@ -66,17 +49,15 @@ class KavenegarSmsSenderTest extends TestCase
         config()->set([
             'services.kavenegar.api_key' => null,
             'services.kavenegar.template' => null,
-            'services.kavenegar.base_url' => 'https://api.kavenegar.com',
         ]);
-        Http::preventStrayRequests();
+        $this->mock(KavenegarApiFactory::class)->shouldNotReceive('create');
 
         try {
             app(KavenegarSmsSender::class)->send('+989123456789', '01234');
             $this->fail('Missing Kavenegar configuration was accepted.');
-        } catch (RuntimeException $exception) {
+        } catch (KavenegarSmsException $exception) {
             $this->assertSame('Kavenegar OTP delivery is not configured.', $exception->getMessage());
+            $this->assertNull($exception->providerStatus());
         }
-
-        Http::assertNothingSent();
     }
 }

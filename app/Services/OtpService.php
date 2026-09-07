@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Portal;
+use App\Exceptions\KavenegarSmsException;
 use App\Models\OtpChallenge;
 use App\Models\User;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Kavenegar\Exceptions\HttpException as KavenegarHttpException;
 
 class OtpService
 {
@@ -74,7 +76,13 @@ class OtpService
                                 $this->sms->send($mobile, $code);
                             } catch (\Throwable $exception) {
                                 // Transport exceptions may contain the SMS body; never report them verbatim.
-                                Log::error('OTP delivery failed', ['exception_type' => $exception::class]);
+                                $context = ['exception_type' => $exception::class];
+                                if ($exception instanceof KavenegarSmsException && $exception->providerStatus() !== null) {
+                                    $context['provider_status'] = $exception->providerStatus();
+                                } elseif ($exception instanceof KavenegarHttpException) {
+                                    $context['transport_code'] = $exception->getCode();
+                                }
+                                Log::error('OTP delivery failed', $context);
                                 throw ValidationException::withMessages(['mobile' => 'ارسال کد انجام نشد. کمی بعد دوباره تلاش کنید.']);
                             }
                         }

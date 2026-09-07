@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Enums\PlatformRole;
+use App\Exceptions\KavenegarSmsException;
 use App\Models\Business;
 use App\Models\OtpChallenge;
 use App\Models\User;
+use App\Services\KavenegarApiFactory;
 use App\Services\KavenegarSmsSender;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Kavenegar\Exceptions\HttpException as KavenegarHttpException;
+use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -19,7 +23,7 @@ class OtpAuthenticationTest extends TestCase
 
     private function captureSms(): object
     {
-        $capture = new class extends KavenegarSmsSender
+        $capture = new class(Mockery::mock(KavenegarApiFactory::class)) extends KavenegarSmsSender
         {
             public array $messages = [];
 
@@ -354,11 +358,27 @@ class OtpAuthenticationTest extends TestCase
 
     public function test_sms_failure_does_not_leave_a_usable_challenge(): void
     {
-        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new \RuntimeException('transport failed'));
-        Log::shouldReceive('error')->once()->with('OTP delivery failed', ['exception_type' => \RuntimeException::class]);
+        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new KavenegarHttpException('transport failed', 28));
+        Log::shouldReceive('error')->once()->with('OTP delivery failed', [
+            'exception_type' => KavenegarHttpException::class,
+            'transport_code' => 28,
+        ]);
         $this->post('/login', ['mobile' => '09123456789'])->assertSessionHasErrors(['mobile' => 'ارسال کد انجام نشد. کمی بعد دوباره تلاش کنید.'])->assertSessionMissing('otp.public');
         $this->assertDatabaseCount('otp_challenges', 0);
         $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_sms_provider_failure_logs_only_its_safe_status(): void
+    {
+        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new KavenegarSmsException('provider response', 424));
+        Log::shouldReceive('error')->once()->with('OTP delivery failed', [
+            'exception_type' => KavenegarSmsException::class,
+            'provider_status' => 424,
+        ]);
+
+        $this->post('/login', ['mobile' => '09123456789'])->assertSessionHasErrors('mobile');
+
+        $this->assertDatabaseCount('otp_challenges', 0);
     }
 
     public function test_new_codes_do_not_reset_the_phone_brute_force_budget(): void
