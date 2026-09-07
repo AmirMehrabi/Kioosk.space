@@ -13,6 +13,11 @@ class Business extends Model
 
     protected $guarded = ['id'];
 
+    protected function casts(): array
+    {
+        return ['phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array'];
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class)->published();
@@ -21,6 +26,16 @@ class Business extends Model
     public function photos(): HasMany
     {
         return $this->hasMany(Media::class)->published();
+    }
+
+    public function featuredPhotos(): BelongsToMany
+    {
+        return $this->belongsToMany(Media::class, 'business_featured_media', 'business_id', 'media_id')->where('media.status', 'published')->withPivot('position')->orderByPivot('position');
+    }
+
+    public function claims(): HasMany
+    {
+        return $this->hasMany(BusinessClaim::class);
     }
 
     public function owners(): BelongsToMany

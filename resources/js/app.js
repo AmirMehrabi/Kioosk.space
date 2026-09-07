@@ -2,6 +2,7 @@ import './auth';
 import './navigation';
 import './city-select';
 import './contribute';
+import './business-management';
 
 document.querySelectorAll('[data-discard-draft]').forEach(button => button.addEventListener('click', async () => {
     button.disabled = true;

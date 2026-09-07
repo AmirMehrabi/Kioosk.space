@@ -10,6 +10,7 @@ use App\Models\Media;
 use App\Models\Review;
 use App\Models\User;
 use App\Notifications\SubmissionUpdated;
+use App\Services\BusinessHours;
 use App\Support\BusinessIdentity;
 use App\Support\PersianDate;
 use Carbon\CarbonImmutable;
@@ -150,6 +151,36 @@ class ContributionTest extends TestCase
         $this->assertDatabaseHas('businesses', ['status' => 'approved']);
         $this->assertDatabaseCount('reviews', 0);
         $this->assertDatabaseCount('business_user', 0);
+    }
+
+    public function test_new_business_contribution_saves_structured_profile_and_featured_photo_order(): void
+    {
+        Storage::fake('local');
+        $staff = $this->staff();
+        $firstClientId = (string) Str::uuid();
+        $secondClientId = (string) Str::uuid();
+        $schedule = collect(BusinessHours::DAYS)->mapWithKeys(fn (string $day): array => [$day => ['closed' => true, 'shifts' => []]])->all();
+        $schedule['saturday'] = ['closed' => false, 'shifts' => [
+            ['opens' => '09:00', 'closes' => '13:00', 'next_day' => false],
+            ['opens' => '16:00', 'closes' => '23:30', 'next_day' => false],
+        ]];
+        $draft = $this->draft($staff, [
+            'with_review' => false,
+            'description' => 'فضایی آرام برای قرارهای کاری.',
+            'phones' => [['label' => 'رزرو', 'value' => '021-12345678']],
+            'websites' => [['label' => 'منو', 'url' => 'https://example.com/menu']],
+            'weekly_hours' => $schedule,
+            'photo_ids' => [$firstClientId, $secondClientId],
+            'featured_photo_ids' => [$secondClientId, $firstClientId],
+        ]);
+        $firstPhotoId = $this->postJson('/contribution-drafts/'.$draft->id.'/photos', ['client_id' => $firstClientId, 'photo' => UploadedFile::fake()->image('first.jpg', 300, 200)])->assertCreated()->json('id');
+        $secondPhotoId = $this->postJson('/contribution-drafts/'.$draft->id.'/photos', ['client_id' => $secondClientId, 'photo' => UploadedFile::fake()->image('second.jpg', 300, 200)])->assertCreated()->json('id');
+
+        $this->postJson('/contribution-drafts/'.$draft->id.'/submit')->assertOk()->assertJsonPath('status', 'published');
+        $business = Business::firstOrFail();
+        $this->assertSame('رزرو', $business->phones[0]['label']);
+        $this->assertSame('16:00', $business->weekly_hours['saturday']['shifts'][1]['opens']);
+        $this->assertSame([$secondPhotoId, $firstPhotoId], $business->featuredPhotos()->pluck('media.id')->all());
     }
 
     public function test_cross_account_drafts_and_suspended_writes_are_rejected(): void
@@ -344,6 +375,20 @@ class ContributionTest extends TestCase
         $this->assertDatabaseHas('reviews', ['id' => $review->id, 'rating' => 3, 'status' => 'pending']);
         $this->actingAs($this->contributor())->get('/contribute?review='.$review->id)->assertNotFound();
         $this->get('/reviews/'.$review->id)->assertNotFound();
+    }
+
+    public function test_contribution_form_offers_device_draft_cleanup_while_rendering_an_existing_review(): void
+    {
+        $author = $this->contributor();
+        $business = Business::factory()->create();
+        $draft = $this->draft($author, ['business_id' => $business->id]);
+        $reviewId = $this->postJson('/contribution-drafts/'.$draft->id.'/submit')->assertOk()->json('review_id');
+
+        $this->get('/contribute?review='.$reviewId)
+            ->assertOk()
+            ->assertSee('data-persist-draft="0"', false)
+            ->assertSee('id="clear-device-drafts"', false)
+            ->assertSee('پاک‌کردن پیش‌نویس‌های این دستگاه');
     }
 
     public function test_existing_business_review_does_not_require_reentering_business_details(): void

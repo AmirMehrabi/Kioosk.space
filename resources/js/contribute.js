@@ -6,8 +6,12 @@ if (app) startContribution().catch(error => { document.getElementById('contribut
 async function startContribution() {
     const el = id => document.getElementById(id), form = el('contribution-form');
     const initial = JSON.parse(el('contribution-initial').textContent);
+    initial.phones ??= initial.phone ? [{label:'اصلی', value:initial.phone}] : [];
+    initial.websites ??= initial.website ? [{label:'وب‌سایت اصلی', url:initial.website}] : [];
+    initial.weekly_hours ??= Object.fromEntries(['saturday','sunday','monday','tuesday','wednesday','thursday','friday'].map(day => [day,{closed:true,shifts:[]}]));
+    initial.featured_photo_ids ??= [];
     let user = app.dataset.user || null, generic = app.dataset.generic === '1';
-    let db, storageAvailable = true, saveTimer, serverTimer, version = 1, adopted = false, busy = false, uploadBusy = false, pendingSave = Promise.resolve();
+    let db, storageAvailable = true, localPersistenceEnabled = app.dataset.persistDraft === '1', saveTimer, serverTimer, version = 1, adopted = false, busy = false, uploadBusy = false, pendingSave = Promise.resolve();
     let state = { serverVersion: null, id: crypto.randomUUID(), payload: initial, photos: [], step: initial.business_id ? 3 : 1, owner: user, expires: Date.now() + 7 * 86400000 };
     const params = new URLSearchParams(location.search);
     const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
@@ -37,12 +41,16 @@ async function startContribution() {
             request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
         });
         const records = await new Promise((resolve, reject) => { const r = db.transaction('drafts').objectStore('drafts').getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
-        for (const record of records.filter(r => r.expires < Date.now())) db.transaction('drafts', 'readwrite').objectStore('drafts').delete(record.id);
-        const recover = records.filter(r => r.expires > Date.now() && (!r.owner || String(r.owner) === String(user)) && !r.submitted).sort((a,b) => b.savedAt - a.savedAt);
+        for (const record of records.filter(r => r.expires < Date.now() || r.payload?.edit_review_id)) db.transaction('drafts', 'readwrite').objectStore('drafts').delete(record.id);
+        const recover = records.filter(r => r.expires > Date.now() && !r.payload?.edit_review_id && (!r.owner || String(r.owner) === String(user)) && !r.submitted).sort((a,b) => b.savedAt - a.savedAt);
         if (!params.has('new') && !params.has('business') && !params.has('review') && !params.has('draft') && recover[0]) state = recover[0];
+        el('clear-device-drafts').hidden = false;
     } catch { storageAvailable = false; }
     function collect() {
-        for (const key of ['name', 'city', 'address', 'phone', 'website', 'opening_hours', 'body', 'visit_date', 'display_name']) state.payload[key] = form.elements[key].value || null;
+        for (const key of ['name', 'city', 'address', 'description', 'body', 'visit_date', 'display_name']) state.payload[key] = form.elements[key].value || null;
+        state.payload.phones = [...form.querySelectorAll('[data-contribution-phone]')].map(row => ({label:row.querySelector('[data-label]').value, value:row.querySelector('[data-value]').value})).filter(item => item.label || item.value);
+        state.payload.websites = [...form.querySelectorAll('[data-contribution-website]')].map(row => ({label:row.querySelector('[data-label]').value, url:row.querySelector('[data-value]').value})).filter(item => item.label || item.url);
+        state.payload.weekly_hours = Object.fromEntries([...form.querySelectorAll('[data-contribution-day]')].map(day => [day.dataset.contributionDay, {closed:day.querySelector('[data-contribution-closed]').checked, shifts:[...day.querySelectorAll('[data-contribution-shift]')].map(shift => ({opens:shift.querySelector('[data-opens]').value,closes:shift.querySelector('[data-closes]').value,next_day:shift.querySelector('[data-next-day]').checked}))}]));
         state.payload.category_id = Number(form.elements.category_id.value) || null;
         state.payload.rating = Number(form.elements.rating.value) || null;
         state.payload.with_review = state.payload.business_id ? true : form.elements.with_review.checked;
@@ -52,19 +60,65 @@ async function startContribution() {
     async function saveLocal() {
         state.savedAt = Date.now(); state.expires = Date.now() + 7 * 86400000;
         if (!storageAvailable) { status('ذخیره روی دستگاه در دسترس نیست؛ این صفحه را تا ثبت نهایی باز نگه دارید.'); return; }
+        if (!localPersistenceEnabled || state.payload.edit_review_id) {
+            try {
+                await deleteLocalDraft(state.id);
+                status(state.payload.edit_review_id ? 'ویرایش تجربه روی این دستگاه ذخیره نمی‌شود.' : 'پیش‌نویس‌های این دستگاه پاک شدند.');
+            } catch {
+                storageAvailable = false; status('ذخیره روی دستگاه در دسترس نیست؛ این صفحه را تا ثبت نهایی باز نگه دارید.');
+            }
+            return;
+        }
         try {
             await new Promise((resolve, reject) => { const tx = db.transaction('drafts', 'readwrite'); tx.objectStore('drafts').put(state); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
             status(user && adopted ? 'روی دستگاه ذخیره شد؛ در انتظار ذخیره در حساب…' : 'پیش‌نویس و عکس‌ها تا هفت روز روی این دستگاه ذخیره شدند.');
         } catch { storageAvailable = false; status('فضای ذخیره‌سازی کافی نیست؛ این صفحه را تا ثبت نهایی باز نگه دارید.'); }
     }
+    async function deleteLocalDraft(id) {
+        if (!storageAvailable) return;
+        await new Promise((resolve, reject) => { const tx = db.transaction('drafts', 'readwrite'); tx.objectStore('drafts').delete(id); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
+    }
+    el('clear-device-drafts').addEventListener('click', async () => {
+        if (!confirm('همه پیش‌نویس‌ها و عکس‌های ذخیره‌شده روی این دستگاه پاک شوند؟ پیش‌نویس‌های حساب شما حذف نمی‌شوند.')) return;
+        clearTimeout(saveTimer); clearTimeout(serverTimer); localPersistenceEnabled = false;
+        const button = el('clear-device-drafts'); button.disabled = true;
+        try {
+            await new Promise((resolve, reject) => { const tx = db.transaction('drafts', 'readwrite'); tx.objectStore('drafts').clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
+            status('همه پیش‌نویس‌های ذخیره‌شده روی این دستگاه پاک شدند.');
+        } catch {
+            status('پاک‌کردن پیش‌نویس‌های دستگاه انجام نشد؛ دوباره تلاش کنید.');
+        } finally {
+            button.disabled = false;
+        }
+    });
     function populate() {
-        for (const key of ['name', 'city', 'category_id', 'address', 'phone', 'website', 'opening_hours', 'body', 'visit_date', 'display_name']) form.elements[key].value = state.payload[key] ?? '';
+        for (const key of ['name', 'city', 'category_id', 'address', 'description', 'body', 'visit_date', 'display_name']) form.elements[key].value = state.payload[key] ?? '';
         form.elements.with_review.checked = state.payload.with_review;
         form.elements.confirm_distinct.checked = !!state.payload.confirm_distinct;
         if (state.payload.rating) form.elements.rating.value = state.payload.rating;
         el('search-name').value = state.payload.name || ''; el('search-city').value = state.payload.city || '';
-        showStep(state.step); renderPhotos();
+        renderStructuredProfile(); showStep(state.step); renderPhotos();
     }
+    function contactRow(type, item = {}) {
+        const row = document.createElement('div'); row.dataset[type === 'phones' ? 'contributionPhone' : 'contributionWebsite'] = ''; row.className='grid gap-2 sm:grid-cols-[9rem_1fr_auto]';
+        row.innerHTML=`<input data-label class="field !mt-0" maxlength="40" placeholder="عنوان"><input data-value class="field !mt-0" dir="ltr" maxlength="500" placeholder="${type === 'phones' ? 'شماره' : 'https://'}"><button type="button" data-contribution-remove class="button-secondary">حذف</button>`;
+        row.querySelector('[data-label]').value=item.label||''; row.querySelector('[data-value]').value=type === 'phones' ? item.value||'' : item.url||''; return row;
+    }
+    function shiftRow(shift = {opens:'09:00',closes:'17:00',next_day:false}) {
+        const row=document.createElement('div'); row.dataset.contributionShift=''; row.className='flex flex-wrap items-end gap-2';
+        row.innerHTML='<label>از<input data-opens type="time" class="field !mt-1"></label><label>تا<input data-closes type="time" class="field !mt-1"></label><label class="mb-3 flex gap-2"><input data-next-day type="checkbox"> روز بعد</label><button type="button" data-contribution-remove-shift class="button-secondary">حذف</button>';
+        row.querySelector('[data-opens]').value=shift.opens; row.querySelector('[data-closes]').value=shift.closes; row.querySelector('[data-next-day]').checked=!!shift.next_day; return row;
+    }
+    function renderStructuredProfile() {
+        for(const type of ['phones','websites']) { const list=form.querySelector(`[data-contribution-list="${type}"]`); list.replaceChildren(...(state.payload[type]||[]).map(item=>contactRow(type,item))); }
+        form.querySelectorAll('[data-contribution-day]').forEach(day=>{const data=state.payload.weekly_hours?.[day.dataset.contributionDay]||{closed:true,shifts:[]};day.querySelector('[data-contribution-closed]').checked=!!data.closed;day.querySelector('[data-contribution-shifts]').replaceChildren(...(data.shifts||[]).map(shiftRow));});
+    }
+    form.addEventListener('click', event => {
+        const add=event.target.closest('[data-contribution-add]'); if(add){const type=add.dataset.contributionAdd,list=form.querySelector(`[data-contribution-list="${type}"]`);if(list.children.length<5)list.append(contactRow(type));}
+        const remove=event.target.closest('[data-contribution-remove]'); if(remove)remove.parentElement.remove();
+        const addShift=event.target.closest('[data-contribution-add-shift]'); if(addShift){const day=addShift.closest('[data-contribution-day]'),list=day.querySelector('[data-contribution-shifts]');if(list.children.length<4){day.querySelector('[data-contribution-closed]').checked=false;list.append(shiftRow());}}
+        const removeShift=event.target.closest('[data-contribution-remove-shift]'); if(removeShift)removeShift.parentElement.remove();
+    });
     async function adopt() {
         if (!user || adopted) return;
         const draft = await api('/contribution-drafts', {method: 'POST', body: JSON.stringify({id: state.id})});
@@ -111,6 +165,7 @@ async function startContribution() {
         el('review-heading').textContent = state.payload.edit_review_id ? 'ویرایش تجربه من' : 'تجربه شما';
         el('display-name-field').hidden = !user || !generic;
         el('submission-summary').textContent = state.payload.business_id ? 'تجربه روی مکان تأییدشده منتشر می‌شود. تجربه پنهان‌شده تا بررسی مدیریت خصوصی می‌ماند.' : 'مکان جدید پس از تأیید مدیریت منتشر می‌شود. تا آن زمان تجربه و عکس‌های شما خصوصی هستند.';
+        el('featured-photo-help').hidden = !!state.payload.business_id;
     }
     async function search(page = 1) {
         const query = new URLSearchParams({query: el('search-name').value, city: el('search-city').value, page});
@@ -124,6 +179,7 @@ async function startContribution() {
             const text = document.createElement('span'); text.textContent = `${business.name} — ${business.category} | ${business.city}، ${business.address}`; button.append(text);
             button.addEventListener('click', async () => {
                 collect(); state.payload.business_id = business.id; state.payload.name = business.name; state.payload.city = business.city; state.payload.with_review = true;
+                state.payload.featured_photo_ids = [];
                 delete state.payload.edit_review_id; delete state.payload.review_version; delete state.payload.correction_business_id;
                 // A server-rendered existing-review lookup supplies the editing identity without adopting demo data.
                 if (user) {
@@ -131,7 +187,7 @@ async function startContribution() {
                         const html = await api(`/contribute?business=${business.id}`);
                         const doc = new DOMParser().parseFromString(html, 'text/html');
                         const current = JSON.parse(doc.getElementById('contribution-initial').textContent);
-                        if (current.edit_review_id) Object.assign(state.payload, current);
+                        if (current.edit_review_id) { Object.assign(state.payload, current); await deleteLocalDraft(state.id).catch(() => { storageAvailable = false; }); }
                     } catch(error) { fail(error); return; }
                 }
                 state.step = 3; populate(); changed();
@@ -193,10 +249,16 @@ async function startContribution() {
                 try {
                     if (photo.server_id) await api(`/contribution-drafts/${state.id}/photos/${photo.server_id}`, {method:'DELETE'});
                     state.photos = state.photos.filter(p => p.client_id !== photo.client_id); URL.revokeObjectURL(previewUrls.get(photo.client_id)); previewUrls.delete(photo.client_id);
+                    state.payload.featured_photo_ids = (state.payload.featured_photo_ids || []).filter(id => id !== photo.client_id);
                     collect(); renderPhotos(); await saveLocal(); if(user) await queueSave();
                 } catch(error) { fail(error); }
             });
             card.append(img,label,progress,remove);
+            if (!state.payload.business_id) {
+                const selected=(state.payload.featured_photo_ids||[]).includes(photo.client_id); const feature=document.createElement('button'); feature.type='button'; feature.className='button-secondary mt-2 w-full'; feature.textContent=selected?`نمای اصلی ${state.payload.featured_photo_ids.indexOf(photo.client_id)+1}`:'افزودن به نمای اصلی';
+                feature.addEventListener('click',()=>{const ids=state.payload.featured_photo_ids||[];state.payload.featured_photo_ids=selected?ids.filter(id=>id!==photo.client_id):(ids.length<5?[...ids,photo.client_id]:ids);renderPhotos();changed();});card.append(feature);
+                if(selected){const controls=document.createElement('div');controls.className='mt-2 flex justify-between';for(const [text,direction] of [['→',-1],['←',1]]){const move=document.createElement('button');move.type='button';move.textContent=text;move.className='button-secondary';move.addEventListener('click',()=>{const ids=state.payload.featured_photo_ids,index=ids.indexOf(photo.client_id),target=index+direction;if(target>=0&&target<ids.length){[ids[index],ids[target]]=[ids[target],ids[index]];renderPhotos();changed();}});controls.append(move);}card.append(controls);}
+            }
             if (photo.status === 'failed') { const retry = document.createElement('button'); retry.type = 'button'; retry.className='button-secondary mt-2 w-full'; retry.textContent='تلاش دوباره'; retry.addEventListener('click', () => uploadPhoto(photo).catch(fail)); card.append(retry); }
             el('photo-previews').append(card);
         }
@@ -245,7 +307,7 @@ async function startContribution() {
         } catch(error) { fail(error); } finally { setBusy(false); }
     });
     function success(result) {
-        state.submitted=true; state.photos=[]; saveLocal(); form.hidden=true; el('stepper').hidden=true; el('contribution-success').hidden=false;
+        state.submitted=true; state.photos=[]; deleteLocalDraft(state.id).catch(() => {}); form.hidden=true; el('stepper').hidden=true; el('contribution-success').hidden=false;
         el('success-heading').textContent = result.status === 'published' ? 'تجربه شما منتشر شد' : result.status === 'pending' ? 'در انتظار تأیید مکان' : 'مشارکت نیازمند بررسی یا اصلاح است';
         el('success-copy').textContent = result.status === 'published' ? 'از به‌اشتراک‌گذاشتن تجربه‌تان سپاسگزاریم.' : 'وضعیت و پیام مدیریت را در «مشارکت‌های من» دنبال کنید.';
         el('success-link').href=result.url; status('مشارکت ثبت شد.');

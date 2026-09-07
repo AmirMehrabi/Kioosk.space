@@ -1,9 +1,14 @@
 <?php
 
 use App\Enums\Portal;
+use App\Http\Controllers\AdminBusinessClaimController;
+use App\Http\Controllers\AdminBusinessController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\BusinessClaimController;
 use App\Http\Controllers\BusinessController;
+use App\Http\Controllers\BusinessManagementController;
+use App\Http\Controllers\BusinessMediaController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModerationController;
@@ -49,6 +54,13 @@ Route::middleware([AuthResponseHeaders::class, EnsurePortalAccess::class.':admin
     Route::post('/submissions/{business}', [$moderation, 'update'])->name('admin.submissions.update');
     Route::get('/reports', [$moderation, 'reports'])->name('admin.reports');
     Route::post('/reports/{report}', [$moderation, 'report'])->name('admin.reports.update');
+    Route::get('/businesses', [AdminBusinessController::class, 'index'])->name('admin.businesses.index');
+    Route::get('/businesses/{business}/edit', [AdminBusinessController::class, 'edit'])->name('admin.businesses.edit');
+    Route::put('/businesses/{business}', [AdminBusinessController::class, 'update'])->name('admin.businesses.update');
+    Route::post('/businesses/{business}/photos', [BusinessMediaController::class, 'store'])->middleware('throttle:20,1,business-photos')->name('admin.businesses.photos.store');
+    Route::delete('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'destroy'])->name('admin.businesses.photos.destroy');
+    Route::get('/ownership-claims', [AdminBusinessClaimController::class, 'index'])->name('admin.claims.index');
+    Route::post('/ownership-claims/{claim}', [AdminBusinessClaimController::class, 'update'])->name('admin.claims.update');
 });
 Route::get('/businesses/{slug}', [BusinessController::class, 'show'])->name('businesses.show');
 
@@ -69,5 +81,15 @@ Route::middleware(AuthResponseHeaders::class)->group(function () {
     Route::post('/logout', [OtpController::class, 'destroy'])->block(10, 5)->name('logout');
     Route::get('/account', PortalController::class)->defaults('portal', 'public')->middleware(EnsurePortalAccess::class.':public')->name('account');
     Route::get('/business/dashboard', PortalController::class)->defaults('portal', 'business')->middleware(EnsurePortalAccess::class.':business')->name('business.dashboard');
+    Route::middleware(EnsurePortalAccess::class.':business')->prefix('business')->group(function () {
+        Route::get('/businesses/{business}/edit', [BusinessManagementController::class, 'edit'])->name('business.businesses.edit');
+        Route::put('/businesses/{business}', [BusinessManagementController::class, 'update'])->name('business.businesses.update');
+        Route::post('/businesses/{business}/photos', [BusinessMediaController::class, 'store'])->middleware('throttle:20,1,business-photos')->name('business.businesses.photos.store');
+        Route::delete('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'destroy'])->name('business.businesses.photos.destroy');
+        Route::get('/claims', [BusinessClaimController::class, 'index'])->name('business.claims.index');
+        Route::get('/claims/new', [BusinessClaimController::class, 'create'])->name('business.claims.create');
+        Route::post('/claims', [BusinessClaimController::class, 'store'])->middleware('throttle:5,60,business-claims')->name('business.claims.store');
+        Route::get('/claims/{claim}/proofs/{proof}', [BusinessClaimController::class, 'proof'])->name('business.claims.proofs.show');
+    });
     Route::get('/admin/dashboard', AdminDashboardController::class)->middleware(EnsurePortalAccess::class.':admin')->name('admin.dashboard');
 });

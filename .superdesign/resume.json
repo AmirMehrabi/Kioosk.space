@@ -24,6 +24,42 @@
         }
       },
       "updatedAt": "2026-09-04T23:24:44.289922+00:00"
+    },
+    "business-management": {
+      "targetKind": "new-ui",
+      "projectId": "92eb00a1-5b46-473a-a818-5be38c3292a9",
+      "designSystemPath": ".superdesign/design-system.md",
+      "activeDraftId": "9d06aa10-095a-4f1a-9ab5-c7dc37040c46",
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "resources/css/app.css",
+        "resources/views/layouts/community.blade.php",
+        "resources/views/layouts/admin.blade.php",
+        "resources/views/components/navbar.blade.php",
+        "resources/views/admin/dashboard.blade.php",
+        "resources/views/contributions/moderation.blade.php",
+        "resources/views/contributions/create.blade.php"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "856c91695df7f5bc6c37223da67b1f6522300a4d85603ff4937218473e45fb1e",
+        "resources/css/app.css": "7e5a01d9c856832ce0c68b7c0a95957b9e13117d01eb7c1dbced5015dd5ad9de",
+        "resources/views/layouts/community.blade.php": "7f6234af3b39dba6a84bdf2fd58d68e16670f5a36fbcf7fffceff3a36522da0c",
+        "resources/views/layouts/admin.blade.php": "249773feb113df1179df9c34c0a1e747b1f00613832d10596560896ec369997b",
+        "resources/views/components/navbar.blade.php": "a45e10a6d5514896b09891d9950051a45be88740d5b957767e3250ce77922ac4",
+        "resources/views/admin/dashboard.blade.php": "5b02b00888a74a348d4d6a9a00d7d7e76972277dff541421e809366544634888",
+        "resources/views/contributions/moderation.blade.php": "92895121d7d1b5a75eb7bb1c52eb3e0761ef34e18c1f0032373deffc3e2182a8",
+        "resources/views/contributions/create.blade.php": "a1fcd54fe14ea81b22a14682fec33f0f8144bf4f94dd2252571763a6ab5af26f"
+      },
+      "components": [],
+      "drafts": {
+        "9d06aa10-095a-4f1a-9ab5-c7dc37040c46": {
+          "title": "مدیریت کسب‌وکار",
+          "visualDirection": "Warm Persian RTL four-section business editor with structured hours and five-photo primary collage",
+          "parentDraftId": null,
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-09-07T08:54:04.476Z"
     }
   }
 }

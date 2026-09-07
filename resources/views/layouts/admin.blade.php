@@ -7,6 +7,10 @@
             $breadcrumbs[] = ['label' => 'مشارکت‌ها', 'url' => route('admin.submissions')];
         } elseif (request()->routeIs('admin.reports*')) {
             $breadcrumbs[] = ['label' => 'گزارش‌های محتوا'];
+        } elseif (request()->routeIs('admin.businesses*')) {
+            $breadcrumbs[] = ['label' => 'کسب‌وکارها', 'url' => route('admin.businesses.index')];
+        } elseif (request()->routeIs('admin.claims*')) {
+            $breadcrumbs[] = ['label' => 'درخواست‌های مالکیت'];
         }
         if (request()->routeIs('admin.submissions.show')) {
             $breadcrumbs[] = ['label' => $business->name];
@@ -23,7 +27,7 @@
                     <p class="text-xs font-semibold text-muted">پرتال مدیریت</p>
                 </div>
                 <nav class="mt-3 flex gap-2 overflow-x-auto lg:block lg:space-y-1" aria-label="بخش‌های مدیریت">
-                    @foreach(['admin.dashboard' => 'داشبورد', 'admin.submissions' => 'مشارکت‌ها', 'admin.reports' => 'گزارش‌ها'] as $destination => $label)
+                    @foreach(['admin.dashboard' => 'داشبورد', 'admin.businesses.index' => 'کسب‌وکارها', 'admin.submissions' => 'مشارکت‌ها', 'admin.claims.index' => 'درخواست‌های مالکیت', 'admin.reports' => 'گزارش‌ها'] as $destination => $label)
                         <a @class(['admin-nav-item shrink-0', 'admin-nav-item-active' => request()->routeIs($destination, $destination.'.*')]) href="{{ route($destination) }}" @if(request()->routeIs($destination, $destination.'.*')) aria-current="{{ request()->routeIs($destination) ? 'page' : 'location' }}" @endif>{{ $label }}</a>
                     @endforeach
                 </nav>

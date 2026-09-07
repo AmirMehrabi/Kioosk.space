@@ -16,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class SubmitContribution
 {
+    public function __construct(private BusinessHours $hours) {}
+
     public function handle(ContributionDraft $draft, User $user, bool $staff): array
     {
         return Cache::lock('contributions:write', 60)->block(10, fn () => DB::transaction(function () use ($draft, $user, $staff) {
@@ -42,6 +44,9 @@ class SubmitContribution
             $photos = $draft->photos()->lockForUpdate()->get();
             if ($photos->pluck('client_id')->sort()->values()->all() !== collect($data['photo_ids'])->sort()->values()->all()) {
                 throw ValidationException::withMessages(['photo_ids' => 'بارگذاری همه عکس‌ها را کامل کنید یا عکس ناموفق را حذف کنید.']);
+            }
+            if (array_diff($data['featured_photo_ids'] ?? [], $data['photo_ids'])) {
+                throw ValidationException::withMessages(['featured_photo_ids' => 'تصاویر نمای اصلی باید از عکس‌های همین مشارکت باشند.']);
             }
             if (! empty($data['business_id'])) {
                 $business = Business::findOrFail($data['business_id']);
@@ -111,6 +116,16 @@ class SubmitContribution
             foreach ($photos as $photo) {
                 $photo->update(['business_id' => $business->id, 'review_id' => $review?->id, 'status' => 'published']);
             }
+            if (empty($data['business_id']) && ! empty($data['featured_photo_ids'])) {
+                $featured = [];
+                foreach ($data['featured_photo_ids'] as $position => $clientId) {
+                    $photo = $photos->firstWhere('client_id', $clientId);
+                    if ($photo) {
+                        $featured[$photo->id] = ['position' => $position + 1];
+                    }
+                }
+                $business->featuredPhotos()->sync($featured);
+            }
             $result = ['status' => $business->status === 'approved' ? ($review?->status ?? 'published') : 'pending', 'business_id' => $business->id, 'review_id' => $review?->id, 'url' => $business->status === 'approved' ? route('businesses.show', $business->slug) : route('contributions.index')];
             $draft->update(['status' => 'submitted', 'result' => $result]);
 
@@ -120,7 +135,12 @@ class SubmitContribution
 
     public function businessData(array $data): array
     {
-        return collect($data)->only(['name', 'category_id', 'city', 'address', 'phone', 'website', 'opening_hours', 'latitude', 'longitude'])->all() + [
+        $phones = array_values($data['phones'] ?? (! empty($data['phone']) ? [['label' => 'اصلی', 'value' => $data['phone']]] : []));
+        $websites = array_values($data['websites'] ?? (! empty($data['website']) ? [['label' => 'وب‌سایت اصلی', 'url' => $data['website']]] : []));
+
+        return collect($data)->only(['name', 'category_id', 'city', 'address', 'description', 'opening_hours', 'latitude', 'longitude'])->all() + [
+            'phones' => $phones, 'websites' => $websites, 'weekly_hours' => $this->hours->normalize($data['weekly_hours'] ?? null),
+            'phone' => $phones[0]['value'] ?? null, 'website' => $websites[0]['url'] ?? null,
             'normalized_name' => BusinessIdentity::normalize($data['name']),
             'normalized_city' => BusinessIdentity::normalize($data['city']),
         ];

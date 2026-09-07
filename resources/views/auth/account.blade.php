@@ -11,9 +11,10 @@
     <h1 class="text-2xl font-bold">{{ $portal === \App\Enums\Portal::Admin ? 'به بخش مدیریت خوش آمدید' : 'خوش آمدید، '.auth()->user()->name }}</h1>
     <p class="mt-3 text-sm leading-7 text-secondary">شماره <bdi dir="ltr">{{ \App\Support\IranianMobile::display(auth()->user()->mobile) }}</bdi> تأیید شده است.</p>
     @if ($portal === \App\Enums\Portal::Business)
+        <div class="mb-4 flex flex-wrap gap-3"><a class="button-primary" href="{{ route('business.claims.create') }}">درخواست مالکیت کسب‌وکار</a><a class="button-secondary" href="{{ route('business.claims.index') }}">پیگیری درخواست‌ها</a></div>
         <div class="mt-6 rounded-xl border border-border bg-soft p-4">
             @forelse ($businesses as $business)
-                <p class="py-2 text-sm font-semibold">{{ $business->name }}</p>
+                <div class="flex items-center justify-between gap-3 py-2"><p class="text-sm font-semibold">{{ $business->name }}</p><a class="button-secondary" href="{{ route('business.businesses.edit',$business) }}">مدیریت</a></div>
             @empty
                 <h2 class="text-sm font-bold">هنوز کسب‌وکاری به حساب شما متصل نیست</h2>
                 <p class="mt-2 text-xs leading-7 text-secondary">برای مدیریت یک کسب‌وکار، مالکیت شما باید تأیید شود. ورود به این بخش به‌تنهایی دسترسی مدیریت ایجاد نمی‌کند.</p>

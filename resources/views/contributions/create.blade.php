@@ -4,14 +4,17 @@
 @endsection
 @section('title', 'افزودن مکان یا نوشتن نظر')
 @section('content')
-<div id="contribution-app" class="mx-auto max-w-2xl" data-user="{{ auth()->id() }}" data-generic="{{ auth()->check() && preg_match('/^(کاربر|User)(\s|$)/u', auth()->user()->name) ? '1' : '0' }}">
+<div id="contribution-app" class="mx-auto max-w-2xl" data-user="{{ auth()->id() }}" data-generic="{{ auth()->check() && preg_match('/^(کاربر|User)(\s|$)/u', auth()->user()->name) ? '1' : '0' }}" data-persist-draft="{{ isset($initial['edit_review_id']) ? '0' : '1' }}">
     <script id="contribution-initial" type="application/json">{!! json_encode($initial, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
     <h1 class="text-2xl font-bold">افزودن مکان یا نوشتن نظر</h1>
     <p class="mt-3 leading-7 text-secondary">از هر جای ایران، تجربه شما به انتخاب بهتر دیگران کمک می‌کند.</p>
     <ol id="stepper" aria-label="مراحل مشارکت" class="my-6 grid grid-cols-4 gap-2 text-center text-xs sm:text-sm">
         @foreach(['پیدا کردن', 'اطلاعات مکان', 'تجربه شما', 'ثبت نهایی'] as $step)<li class="rounded-xl bg-soft px-1 py-3" data-step-label="{{ $loop->iteration }}">{{ $loop->iteration }}. {{ $step }}</li>@endforeach
     </ol>
-    <p id="draft-status" class="mb-4 text-sm text-muted" role="status" aria-live="polite">در حال بازیابی پیش‌نویس…</p>
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p id="draft-status" class="text-sm text-muted" role="status" aria-live="polite">در حال بازیابی پیش‌نویس…</p>
+        <button type="button" id="clear-device-drafts" class="button-secondary text-sm" hidden>پاک‌کردن پیش‌نویس‌های این دستگاه</button>
+    </div>
     <p id="contribution-error" role="alert" tabindex="-1" class="field-error mb-4" hidden></p>
     <div id="conflict" class="panel mb-4" hidden><p>تجربه قبلی شما موجود است. این پیش‌نویس محفوظ می‌ماند.</p><a id="edit-existing" class="button-secondary mt-3">ویرایش تجربه من</a></div>
     <div id="draft-conflict" class="panel mb-4" hidden><p>نسخه این دستگاه را نگه دارید و تغییرات ذخیره‌شده در حساب را بررسی کنید.</p><a id="reload-draft" target="_blank" rel="noopener" class="button-secondary mt-3">بررسی نسخه حساب در پنجره تازه</a></div>
@@ -32,10 +35,11 @@
             <label class="block">دسته‌بندی <span class="text-pomegranate">*</span><select class="field" name="category_id"><option value="">انتخاب کنید</option>@foreach($categories as $category)<option value="{{ $category->id }}">{{ $category->name }}</option>@endforeach</select><span class="field-error" data-error="category_id"></span></label>
             <x-city-select :cities="$cities" id="city" name="city" label="شهر" required hint="شهر خود را از فهرست انتخاب کنید."><span class="field-error" data-error="city"></span></x-city-select>
             <label class="block">آدرس کوتاه <span class="text-pomegranate">*</span><input class="field" name="address" maxlength="500"><span class="field-error" data-error="address"></span></label>
-            <details><summary class="cursor-pointer py-3 text-secondary">اطلاعات اختیاری؛ تماس و ساعت کار</summary><div class="space-y-4 pt-3">
-                <label class="block">تلفن<input class="field" name="phone" type="tel" maxlength="40" dir="ltr"><span class="field-error" data-error="phone"></span></label>
-                <label class="block">وب‌سایت<input class="field" name="website" type="url" maxlength="500" placeholder="https://" dir="ltr"><span class="field-error" data-error="website"></span></label>
-                <label class="block">ساعت کار به وقت تهران<textarea class="field" name="opening_hours" maxlength="1000" rows="2"></textarea></label>
+            <label class="block">معرفی کوتاه<textarea class="field" name="description" maxlength="3000" rows="4"></textarea><span class="field-error" data-error="description"></span></label>
+            <details><summary class="cursor-pointer py-3 font-semibold text-secondary">راه‌های تماس و ساعت کاری</summary><div class="space-y-6 pt-3">
+                <div><div class="flex items-center justify-between"><h3 class="font-bold">شماره‌های تلفن</h3><button type="button" class="button-secondary" data-contribution-add="phones">+ شماره</button></div><div class="mt-3 space-y-2" data-contribution-list="phones"></div></div>
+                <div><div class="flex items-center justify-between"><h3 class="font-bold">وب‌سایت‌ها</h3><button type="button" class="button-secondary" data-contribution-add="websites">+ وب‌سایت</button></div><div class="mt-3 space-y-2" data-contribution-list="websites"></div></div>
+                <div><h3 class="font-bold">ساعت کاری هفتگی</h3><p class="mt-1 text-xs text-muted">به وقت تهران؛ برای هر روز چند نوبت یا حالت تعطیل تعریف کنید.</p><div class="mt-3 divide-y divide-border rounded-xl border border-border">@foreach(\App\Services\BusinessHours::DAYS as $day)<div class="grid gap-3 p-3 sm:grid-cols-[6rem_6rem_1fr]" data-contribution-day="{{ $day }}"><strong class="pt-3">{{ \App\Services\BusinessHours::LABELS[$day] }}</strong><label class="flex items-center gap-2"><input type="checkbox" data-contribution-closed class="size-5" checked> تعطیل</label><div><div class="space-y-2" data-contribution-shifts></div><button type="button" class="mt-2 text-sm font-bold text-pomegranate" data-contribution-add-shift>+ افزودن نوبت</button></div></div>@endforeach</div></div>
             </div></details>
             <label class="flex items-start gap-3"><input name="confirm_distinct" type="checkbox" class="mt-1 size-5"><span class="text-sm leading-7">نتایج جست‌وجو را بررسی کردم؛ این مکان یا شعبه با مکان‌های مشابه متفاوت است.</span></label><span class="field-error" data-error="confirm_distinct"></span>
         </section>
@@ -53,7 +57,8 @@
             <h2 class="text-xl font-bold" tabindex="-1">عکس‌ها و ثبت نهایی</h2>
             <p class="text-sm leading-7 text-secondary">تا شش عکس JPEG، PNG یا WebP، هر عکس حداکثر ۱۰ مگابایت. عکس‌ها اختیاری هستند.</p>
             <div class="flex flex-wrap gap-3"><label class="button-secondary cursor-pointer">انتخاب از گالری<input id="gallery-input" type="file" accept="image/jpeg,image/png,image/webp" multiple class="sr-only"></label><label class="button-secondary cursor-pointer">گرفتن عکس<input id="camera-input" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" class="sr-only"></label></div>
-            <div id="photo-previews" class="grid grid-cols-2 gap-3 sm:grid-cols-3"></div><span class="field-error" data-error="photo_ids"></span>
+            <p id="featured-photo-help" class="rounded-xl bg-soft p-3 text-sm">برای مکان تازه، تا پنج تصویر را به‌عنوان پنجره‌های اصلی انتخاب و با فلش‌ها مرتب کنید. تصویر اول، تصویر کارت مکان است.</p>
+            <div id="photo-previews" class="grid grid-cols-2 gap-3 sm:grid-cols-3"></div><span class="field-error" data-error="photo_ids"></span><span class="field-error" data-error="featured_photo_ids"></span>
             <div id="display-name-field" hidden><label>نام نمایشی عمومی<input class="field" name="display_name" minlength="2" maxlength="60" autocomplete="nickname"><span class="text-xs text-muted">این نام کنار تجربه شما دیده می‌شود؛ شماره موبایل نمایش داده نمی‌شود.</span><span class="field-error" data-error="display_name"></span></label></div>
             <div id="otp-panel" class="rounded-xl bg-soft p-4" hidden>
                 <h3 class="font-bold">ورود برای ثبت نهایی</h3><p class="mt-2 text-sm leading-7">پیش‌نویس و عکس‌ها در همین صفحه محفوظ می‌مانند.</p>

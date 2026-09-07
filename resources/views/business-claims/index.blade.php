@@ -1,0 +1,6 @@
+@extends('layouts.community')
+@section('title', 'درخواست‌های مالکیت من')
+@section('breadcrumbs')<x-breadcrumbs :items="[['label'=>'پرتال کسب‌وکار','url'=>route('business.dashboard')],['label'=>'درخواست‌های مالکیت']]" />@endsection
+@section('content')
+<div class="mx-auto max-w-3xl"><div class="flex flex-wrap items-center justify-between gap-3"><h1 class="text-3xl font-bold">درخواست‌های مالکیت من</h1><a class="button-primary" href="{{ route('business.claims.create') }}">درخواست تازه</a></div><div class="mt-6 space-y-4">@forelse($claims as $claim)<article class="panel"><div class="flex items-start justify-between gap-3"><div><h2 class="font-bold">{{ $claim->business->name }}</h2><p class="mt-1 text-sm text-muted">{{ $claim->business->city }}</p></div><span class="admin-status">{{ ['pending'=>'در انتظار بررسی','approved'=>'تأییدشده','rejected'=>'ردشده'][$claim->status] }}</span></div><p class="mt-4 whitespace-pre-wrap leading-7">{{ $claim->note }}</p>@if($claim->decision_reason)<p class="mt-4 rounded-xl bg-soft p-3 text-sm"><b>پاسخ مدیریت:</b> {{ $claim->decision_reason }}</p>@endif</article>@empty<p class="panel text-muted">هنوز درخواست مالکیتی ثبت نکرده‌اید.</p>@endforelse</div><div class="mt-5">{{ $claims->links() }}</div></div>
+@endsection

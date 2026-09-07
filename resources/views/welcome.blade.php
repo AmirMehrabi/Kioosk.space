@@ -23,7 +23,8 @@
     @forelse($businesses as $business)
         <article class="overflow-hidden rounded-2xl border border-border bg-surface">
             <a href="{{ route('businesses.show', $business->slug) }}">
-                @if($business->photos->first())<img class="h-48 w-full object-cover" src="{{ route('media.show', [$business->photos->first(), 'thumbnail' => 1]) }}" alt="{{ $business->name }}" loading="lazy">@else<div class="flex h-36 items-center justify-center bg-soft text-muted">هنوز عکسی ثبت نشده</div>@endif
+                @php($cardPhoto = $business->featuredPhotos->first() ?? $business->photos->first())
+                @if($cardPhoto)<img class="h-48 w-full object-cover" src="{{ route('media.show', [$cardPhoto, 'thumbnail' => 1]) }}" alt="{{ $business->name }}" loading="lazy">@else<div class="flex h-36 items-center justify-center bg-soft text-muted">هنوز عکسی ثبت نشده</div>@endif
                 <div class="p-5"><h3 class="text-xl font-bold">{{ $business->name }}</h3><p class="mt-3 text-sm text-secondary">{{ $business->city }} · {{ $business->address }}</p><x-review-stars class="mt-4" :rating="$business->reviews_avg_rating ?? 0" /><p class="mt-4 text-pomegranate">★ {{ $business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز' }} <span class="text-sm text-muted">({{ $business->reviews_count }} تجربه)</span></p></div>
             </a>
         </article>
