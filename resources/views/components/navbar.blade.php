@@ -1,8 +1,9 @@
 @props(['minimal' => false, 'portal' => null])
 
 <header class="border-b border-border/70 bg-surface">
-    <nav class="mx-auto flex min-h-20 max-w-6xl flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3 sm:gap-x-8" aria-label="فهرست اصلی">
-        <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="shrink-0 rounded-lg text-3xl font-extrabold tracking-tight">کیوسک<span class="text-pomegranate">.</span></a>
+    <nav class="mx-auto flex min-h-20 max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 sm:gap-x-3" aria-label="فهرست اصلی">
+        <img src="{{ asset('images/logo/logo-fa.png') }}" class="w-42" alt="">
+        <!-- <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="shrink-0 rounded-lg text-3xl font-extrabold tracking-tight">کیوسک<span class="text-pomegranate">.</span></a> -->
         <a href="{{ route('home') }}" @class(['nav-link hidden sm:inline-flex', 'nav-link-active' => request()->routeIs('home', 'businesses.show', 'reviews.show')]) @if(request()->routeIs('home')) aria-current="page" @endif>کشف مکان‌ها</a>
         <div class="ms-auto flex items-center gap-2 sm:gap-4">
             @unless($minimal)
