@@ -9,6 +9,7 @@ use App\Http\Controllers\BusinessClaimController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessManagementController;
 use App\Http\Controllers\BusinessMediaController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModerationController;
@@ -20,6 +21,8 @@ use App\Http\Middleware\EnsurePortalAccess;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BusinessController::class, 'index'])->name('home');
+Route::get('/contact', [ContactController::class, 'index'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/contribute', [ContributionController::class, 'create'])->middleware(AuthResponseHeaders::class)->name('contribute');
 Route::get('/businesses/search', [BusinessController::class, 'search'])->middleware('throttle:60,1,business-search')->name('businesses.search');
 Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show');
