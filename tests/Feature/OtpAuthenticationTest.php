@@ -358,6 +358,7 @@ class OtpAuthenticationTest extends TestCase
 
     public function test_sms_failure_does_not_leave_a_usable_challenge(): void
     {
+        config()->set('otp.log_failed_code', false);
         $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new KavenegarHttpException('transport failed', 28));
         Log::shouldReceive('error')->once()->with('OTP delivery failed', [
             'exception_type' => KavenegarHttpException::class,
@@ -368,12 +369,54 @@ class OtpAuthenticationTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
+    public function test_failed_sms_can_log_a_usable_fallback_code_when_enabled(): void
+    {
+        config()->set('otp.log_failed_code', true);
+        $fallbackCode = null;
+        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new KavenegarHttpException('Could not resolve host', 6));
+        Log::shouldReceive('error')->once()->with('OTP delivery failed', [
+            'exception_type' => KavenegarHttpException::class,
+            'transport_code' => 6,
+        ]);
+        Log::shouldReceive('warning')->once()->with('OTP delivery fallback code', Mockery::on(function (array $context) use (&$fallbackCode): bool {
+            $fallbackCode = $context['code'] ?? null;
+
+            return $context['mobile'] === '+98********89'
+                && is_string($fallbackCode)
+                && preg_match('/^[0-9]{5}$/D', $fallbackCode) === 1;
+        }));
+
+        $this->post('/login', ['mobile' => '09123456789'])->assertRedirect('/verify');
+
+        $this->assertDatabaseCount('otp_challenges', 1);
+        $this->post('/verify', ['code' => $fallbackCode])->assertRedirect('/account');
+        $this->assertAuthenticated();
+    }
+
     public function test_sms_provider_failure_logs_only_its_safe_status(): void
     {
+        config()->set('otp.log_failed_code', false);
         $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andThrow(new KavenegarSmsException('provider response', 424));
         Log::shouldReceive('error')->once()->with('OTP delivery failed', [
             'exception_type' => KavenegarSmsException::class,
             'provider_status' => 424,
+        ]);
+
+        $this->post('/login', ['mobile' => '09123456789'])->assertSessionHasErrors('mobile');
+
+        $this->assertDatabaseCount('otp_challenges', 0);
+    }
+
+    public function test_sms_php_error_is_logged_without_otp_configuration_or_mobile_secrets(): void
+    {
+        config()->set('otp.log_failed_code', false);
+        config()->set('services.kavenegar.api_key', 'secret-api-key');
+        $this->mock(KavenegarSmsSender::class)->shouldReceive('send')->once()->andReturnUsing(
+            fn (string $mobile, string $code) => throw new \Error("Failure for {$mobile} using {$code} and secret-api-key"),
+        );
+        Log::shouldReceive('error')->once()->with('OTP delivery failed', [
+            'exception_type' => \Error::class,
+            'error_message' => 'Failure for [REDACTED] using [REDACTED] and [REDACTED]',
         ]);
 
         $this->post('/login', ['mobile' => '09123456789'])->assertSessionHasErrors('mobile');

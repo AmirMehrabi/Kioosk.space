@@ -81,9 +81,26 @@ class OtpService
                                     $context['provider_status'] = $exception->providerStatus();
                                 } elseif ($exception instanceof KavenegarHttpException) {
                                     $context['transport_code'] = $exception->getCode();
+                                } elseif ($exception instanceof \Error) {
+                                    $sensitiveValues = array_filter([
+                                        $mobile,
+                                        $code,
+                                        config('services.kavenegar.api_key'),
+                                    ], fn (mixed $value): bool => is_string($value) && $value !== '');
+                                    $context['error_message'] = Str::limit(
+                                        str_replace($sensitiveValues, '[REDACTED]', $exception->getMessage()),
+                                        500,
+                                    );
                                 }
                                 Log::error('OTP delivery failed', $context);
-                                throw ValidationException::withMessages(['mobile' => 'ارسال کد انجام نشد. کمی بعد دوباره تلاش کنید.']);
+                                if (config('otp.log_failed_code')) {
+                                    Log::warning('OTP delivery fallback code', [
+                                        'mobile' => Str::mask($mobile, '*', 3, -2),
+                                        'code' => $code,
+                                    ]);
+                                } else {
+                                    throw ValidationException::withMessages(['mobile' => 'ارسال کد انجام نشد. کمی بعد دوباره تلاش کنید.']);
+                                }
                             }
                         }
 

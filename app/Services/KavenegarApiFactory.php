@@ -8,6 +8,6 @@ class KavenegarApiFactory
 {
     public function create(string $apiKey): KavenegarApi
     {
-        return new KavenegarApi($apiKey);
+        return new KavenegarApiClient($apiKey);
     }
 }
