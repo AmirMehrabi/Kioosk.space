@@ -4,6 +4,29 @@
 @endsection
 @section('title', $business->name)
 @section('content')
+@if($featuredPhotos->isNotEmpty())
+    <section class="relative mb-8" aria-label="تصاویر اصلی کسب‌وکار">
+        <div @class([
+            'grid h-72 gap-1 overflow-hidden rounded-2xl bg-soft sm:h-96 lg:h-[28rem]',
+            'grid-cols-1 grid-rows-1' => $featuredPhotos->count() === 1,
+            'grid-cols-2 grid-rows-1' => $featuredPhotos->count() === 2,
+            'grid-cols-2 grid-rows-2 sm:grid-cols-4' => $featuredPhotos->count() > 2,
+        ])>
+            @foreach($featuredPhotos as $photo)
+                <a href="{{ route('media.show', $photo) }}" @class([
+                    'group relative block min-h-0 min-w-0 overflow-hidden focus-visible:z-10 focus-visible:-outline-offset-4',
+                    'row-span-2 sm:col-span-2' => $loop->first && $featuredPhotos->count() > 2,
+                    'sm:col-span-2' => ! $loop->first && $featuredPhotos->count() === 3,
+                    'sm:row-span-2' => $loop->iteration === 2 && $featuredPhotos->count() === 4,
+                    'hidden sm:block' => $loop->iteration > 3,
+                ])>
+                    <img class="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="تصویر {{ $loop->iteration }} از {{ $business->name }}">
+                </a>
+            @endforeach
+        </div>
+        <a class="button-secondary absolute end-4 bottom-4 shadow-soft" href="#gallery">مشاهده همه تصاویر ({{ $photos->total() }})</a>
+    </section>
+@endif
 <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
     <div>
         <p class="mb-3 text-sm text-muted">{{ $category }} · {{ $business->city }}</p>
@@ -15,8 +38,7 @@
             <form method="post" action="{{ route('businesses.save', $business) }}">@csrf @if($saved)@method('delete')@endif<button class="button-secondary">{{ $saved ? 'حذف از ذخیره‌شده‌ها' : 'ذخیره مکان' }}</button></form>
             @unless($isOwner)<a class="button-secondary" href="{{ route('business.claims.create',['business'=>$business->id]) }}">درخواست مالکیت</a>@endunless
         </div>
-        @if($featuredPhotos->isNotEmpty())<section class="mt-8" aria-label="تصاویر اصلی کسب‌وکار"><div @class(['grid gap-2 overflow-hidden rounded-2xl','grid-cols-2 sm:grid-cols-4 sm:grid-rows-2'=>$featuredPhotos->count()>1,'h-80 sm:h-[28rem]'=>$featuredPhotos->count()>1])>@foreach($featuredPhotos as $photo)<a href="{{ route('media.show',$photo) }}" @class(['relative overflow-hidden','sm:col-span-2 sm:row-span-2'=>$loop->first && $featuredPhotos->count()>2])><img class="h-full min-h-40 w-full object-cover" src="{{ route('media.show',[$photo,'thumbnail'=>1]) }}" alt="تصویر اصلی {{ $business->name }}"></a>@endforeach</div></section>@endif
-        <section class="mt-9" aria-labelledby="gallery-title">
+        <section class="mt-9 scroll-mt-6" id="gallery" aria-labelledby="gallery-title">
             <h2 id="gallery-title" class="mb-4 text-xl font-bold">گالری تصاویر</h2>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 @forelse($photos as $photo)<div><a href="{{ route('media.show', $photo) }}" target="_blank" rel="noopener"><img class="h-48 w-full rounded-xl object-cover sm:h-64" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس {{ $business->name }}" loading="lazy"></a>@if(auth()->id() === $photo->user_id)<form method="post" action="{{ route('media.destroy', $photo) }}">@csrf @method('delete')<button class="button-secondary mt-1">حذف عکس من</button></form>@endif
