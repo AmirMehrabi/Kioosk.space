@@ -15,17 +15,22 @@ use Illuminate\View\View;
 
 class BusinessController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): View|JsonResponse
     {
-        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer']]);
-        $businesses = $this->searchQuery($request)->with(['featuredPhotos', 'photos' => fn ($query) => $query->limit(1)])
-            ->withCount('reviews')->withAvg('reviews', 'rating')->latest('businesses.id')->paginate(12)->withQueryString();
+        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer'], 'page' => ['nullable', 'integer', 'min:1']]);
         $recentReviews = Review::published()->whereIn('business_id', $this->searchQuery($request)->select('businesses.id'))
-            ->with(['author:id,name', 'business:id,name,slug,city', 'photos' => fn ($query) => $query->published()->latest()->limit(3)])
-            ->latest('created_at')->latest('id')->limit(6)->get();
+            ->with(['author:id,name', 'business:id,name,slug,city', 'photos' => fn ($query) => $query->published()->latest()->orderBy('id')->limit(4)])
+            ->latest('created_at')->latest('id')->simplePaginate(12)->withQueryString();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'html' => view('home-review-cards', compact('recentReviews'))->render(),
+                'next' => $recentReviews->nextPageUrl(),
+            ]);
+        }
 
         return view('welcome', [
-            'businesses' => $businesses, 'recentReviews' => $recentReviews,
+            'recentReviews' => $recentReviews,
             'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get(),
         ]);
     }

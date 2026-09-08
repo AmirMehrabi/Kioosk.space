@@ -1,6 +1,12 @@
 @props(['name', 'filled' => false])
 <svg {{ $attributes->class(['size-5 shrink-0']) }} viewBox="0 0 24 24" fill="{{ $filled ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     @switch($name)
+        @case('utensils') <path d="M4 3v5a3 3 0 0 0 6 0V3M7 3v18M17 3c-2 3-3 7-3 10h5M19 3v18"/> @break
+        @case('shopping-bag') <path d="M4 7h16l1 14H3ZM8 8V6a4 4 0 0 1 8 0v2"/> @break
+        @case('medical') <rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 5V3h8v2M12 10v6m-3-3h6"/> @break
+        @case('sparkles') <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM3 3v4M1 5h4m15 13v4m-2-2h4"/> @break
+        @case('home') <path d="m3 11 9-8 9 8M5 9v12h14V9M9 21v-8h6v8"/> @break
+        @case('compass') <circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6Z"/> @break
         @case('star') <path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2L3 9.6l6.2-.9Z"/> @break
         @case('search') <circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/> @break
         @case('pin') <path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/> @break

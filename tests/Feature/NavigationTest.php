@@ -12,14 +12,14 @@ class NavigationTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_category_navigation_preserves_search_and_city_and_resets_pagination(): void
+    public function test_homepage_categories_link_to_discovery_and_preserve_city(): void
     {
         $response = $this->get('/?query=cafe&city='.urlencode('تهران').'&category=1&page=2');
 
         $response->assertOk()
-            ->assertSee(route('home', ['query' => 'cafe', 'city' => 'تهران', 'category' => 2]).'#places')
-            ->assertSee(route('home', ['query' => 'cafe', 'city' => 'تهران']).'#places')
-            ->assertSee('name="category" value="1"', false);
+            ->assertSee(route('discovery', ['city' => 'تهران', 'category' => 2]))
+            ->assertSee('action="'.route('discovery').'"', false)
+            ->assertSee('value="cafe"', false);
     }
 
     public function test_admin_preview_has_a_breadcrumb_back_to_the_submission_queue(): void

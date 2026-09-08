@@ -80,3 +80,34 @@
 @media (prefers-reduced-motion: reduce) {
     .discovery-result, .discovery-category { transition: none; }
 }
+
+@layer components {
+    .navbar-search [data-city-select] > label { @apply sr-only; }
+    .navbar-search .field { @apply m-0 min-h-11 rounded-none border-0 bg-transparent px-2 py-2 text-sm shadow-none; }
+    .navbar-search [data-city-options] { @apply z-50 min-w-40; }
+    .home-hero { background: #f2eee5; }
+    .home-review { box-shadow: 0 3px 12px rgb(36 27 20 / 2%); }
+    .home-review-stars > span { @apply size-6 rounded-[5px] text-xs; }
+    .review-avatar { background: #eee6db; color: #866345; }
+    .review-avatar[data-tone='1'] { background: #e8eddf; color: #62774e; }
+    .review-avatar[data-tone='2'] { background: #f5e6e2; color: #af6457; }
+    .review-avatar[data-tone='3'] { background: #e4ebed; color: #56767d; }
+    .review-excerpt { min-height: 5.25rem; }
+    .review-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 3px; height: 210px; overflow: hidden; border-radius: 10px; }
+    .review-gallery[data-photo-count='1'] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+    .review-gallery[data-photo-count='2'] { grid-template-rows: 1fr; }
+    .review-gallery[data-photo-count='3'] > :first-child { grid-row: span 2; }
+    .home-category:hover { box-shadow: 0 8px 24px rgb(36 27 20 / 4%); }
+}
+@media (width < 64rem) {
+    .home-scene { width: 60%; opacity: .45; }
+    .home-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to left, #f2eee5 32%, #f2eee500); }
+}
+@media (width < 40rem) {
+    .home-scene { width: 100%; height: 250px; opacity: .35; }
+    .home-hero::after { background: linear-gradient(170deg, #f2eee5 35%, #f2eee500); }
+}
+.review-lightbox { margin: auto; max-width: min(94vw, 1100px); max-height: 90dvh; padding: 0; border: 0; border-radius: 16px; background: #171717; color: white; }
+.review-lightbox::backdrop { background: #171717db; }
+.review-lightbox img { display: block; max-width: 100%; max-height: 80dvh; object-fit: contain; margin: auto; }
+.review-lightbox-close { display: block; min-height: 48px; padding: 12px 20px; margin-inline-start: auto; font: inherit; cursor: pointer; }

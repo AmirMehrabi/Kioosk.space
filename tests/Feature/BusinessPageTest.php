@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Business;
 use App\Models\Media;
+use App\Models\Review;
 use App\Models\User;
 use App\Support\DemoBusinesses;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -61,10 +62,11 @@ class BusinessPageTest extends TestCase
         $this->get('/businesses/nonexistent-business')->assertNotFound();
     }
 
-    public function test_homepage_links_to_all_three_businesses(): void
+    public function test_homepage_review_cards_link_to_their_businesses(): void
     {
         foreach (self::businesses() as [$slug, $name]) {
-            Business::factory()->create(['slug' => $slug, 'name' => $name]);
+            $business = Business::factory()->create(['slug' => $slug, 'name' => $name]);
+            Review::create(['business_id' => $business->id, 'user_id' => User::factory()->create()->id, 'rating' => 4, 'body' => 'یک تجربه خوب و به‌یادماندنی.', 'visit_date' => '2026-09-01', 'status' => 'published']);
         }
         $response = $this->get('/')->assertOk();
         foreach (self::businesses() as [$slug, $name]) {
