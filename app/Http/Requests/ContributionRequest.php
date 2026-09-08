@@ -18,6 +18,8 @@ class ContributionRequest extends FormRequest
     public static function payloadRules(bool $complete = false): array
     {
         $required = $complete ? 'required_without:business_id' : 'nullable';
+        $phoneValueRules = $complete ? ['required', 'string', 'max:40', 'regex:/^[+۰-۹٠-٩0-9()\s-]+$/u'] : ['nullable', 'string', 'max:40'];
+        $websiteUrlRules = $complete ? ['required', 'url:http,https', 'max:500'] : ['nullable', 'string', 'max:500'];
 
         return [
             'business_id' => ['nullable', 'integer'],
@@ -31,11 +33,11 @@ class ContributionRequest extends FormRequest
             'opening_hours' => ['nullable', 'string', 'max:1000'],
             'description' => ['nullable', 'string', 'max:3000'],
             'phones' => ['nullable', 'array', 'max:5'],
-            'phones.*.label' => ['required', 'string', 'max:40'],
-            'phones.*.value' => ['required', 'string', 'max:40', 'regex:/^[+۰-۹٠-٩0-9()\s-]+$/u'],
+            'phones.*.label' => [Rule::requiredIf($complete), 'nullable', 'string', 'max:40'],
+            'phones.*.value' => $phoneValueRules,
             'websites' => ['nullable', 'array', 'max:5'],
-            'websites.*.label' => ['required', 'string', 'max:40'],
-            'websites.*.url' => ['required', 'url:http,https', 'max:500'],
+            'websites.*.label' => [Rule::requiredIf($complete), 'nullable', 'string', 'max:40'],
+            'websites.*.url' => $websiteUrlRules,
             'weekly_hours' => ['nullable', 'array'],
             'weekly_hours.*.closed' => ['required_with:weekly_hours', 'boolean'],
             'weekly_hours.*.shifts' => ['nullable', 'array', 'max:4'],

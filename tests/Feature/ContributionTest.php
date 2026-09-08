@@ -203,6 +203,21 @@ class ContributionTest extends TestCase
         $this->assertSame('کافه آفتاب', $draft->fresh()->payload['name']);
     }
 
+    public function test_incomplete_contact_lines_can_be_saved_to_a_draft_but_not_submitted(): void
+    {
+        $draft = $this->draft($this->contributor());
+
+        $this->putJson('/contribution-drafts/'.$draft->id, [
+            ...$draft->payload,
+            'version' => 2,
+            'websites' => [['label' => 'سایت', 'url' => 'https://']],
+        ])->assertOk();
+
+        $this->postJson('/contribution-drafts/'.$draft->id.'/submit')
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('websites.0.url');
+    }
+
     public function test_malicious_image_is_rejected_and_photo_limit_is_enforced(): void
     {
         Storage::fake('local');

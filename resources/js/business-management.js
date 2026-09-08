@@ -14,8 +14,8 @@ if (manager) {
         const list = document.querySelector(`[data-repeat-list="${type}"]`);
         if (list.children.length >= 5) return;
         const row = document.createElement('div'); row.dataset.repeatRow = ''; row.className = 'grid gap-2 sm:grid-cols-[10rem_1fr_auto]';
-        const label = document.createElement('input'); label.className = 'field !mt-0'; label.placeholder = 'عنوان';
-        const value = document.createElement('input'); value.className = 'field !mt-0'; value.dir = 'ltr'; value.placeholder = type === 'phones' ? 'شماره' : 'https://';
+        const label = document.createElement('input'); label.className = 'field !mt-0'; label.maxLength = 40; label.placeholder = 'عنوان';
+        const value = document.createElement('input'); value.className = 'field !mt-0'; value.maxLength = type === 'phones' ? 40 : 500; value.dir = 'ltr'; value.placeholder = type === 'phones' ? 'شماره' : 'https://';
         label.name = `${type}[${list.children.length}][label]`; value.name = `${type}[${list.children.length}][${type === 'phones' ? 'value' : 'url'}]`;
         const remove = document.createElement('button'); remove.type = 'button'; remove.dataset.removeRow = ''; remove.className = 'button-secondary'; remove.textContent = 'حذف';
         row.append(label, value, remove); list.append(row); label.focus();
