@@ -29,7 +29,10 @@ class UpdateBusinessRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:180'], 'category_id' => ['required', 'integer', 'exists:categories,id'],
             'city' => ['required', 'string', 'exists:cities,name'], 'address' => ['required', 'string', 'max:500'],
-            'description' => ['nullable', 'string', 'max:3000'], 'latitude' => ['nullable', 'numeric', 'between:24,41'], 'longitude' => ['nullable', 'numeric', 'between:43,64'],
+            'description' => ['nullable', 'string', 'max:3000'],
+            'price_range' => ['nullable', 'integer', 'between:1,4'],
+            'latitude' => ['present_with:longitude', 'nullable', 'required_with:longitude', 'numeric', 'between:24,41'],
+            'longitude' => ['present_with:latitude', 'nullable', 'required_with:latitude', 'numeric', 'between:43,64'],
             'phones' => ['nullable', 'array', 'max:5'], 'phones.*.label' => ['required', 'string', 'max:40'], 'phones.*.value' => ['required', 'string', 'max:40', 'regex:/^[+۰-۹٠-٩0-9()\s-]+$/u'],
             'websites' => ['nullable', 'array', 'max:5'], 'websites.*.label' => ['required', 'string', 'max:40'], 'websites.*.url' => ['required', 'url:http,https', 'max:500'],
             'weekly_hours' => ['nullable', 'array'], 'weekly_hours.*.closed' => ['required_with:weekly_hours', 'boolean'], 'weekly_hours.*.shifts' => ['nullable', 'array', 'max:4'],

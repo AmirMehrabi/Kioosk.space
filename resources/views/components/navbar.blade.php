@@ -5,7 +5,7 @@
         <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="shrink-0">
             <img src="{{ asset('images/logo/logo-fa.png') }}" class="w-42" alt="">
         </a>
-        <a href="{{ route('home') }}" @class(['nav-link hidden sm:inline-flex', 'nav-link-active' => request()->routeIs('home', 'businesses.show', 'reviews.show')]) @if(request()->routeIs('home')) aria-current="page" @endif>کشف مکان‌ها</a>
+        <a href="{{ route('discovery') }}" @class(['nav-link hidden sm:inline-flex', 'nav-link-active' => request()->routeIs('discovery', 'businesses.show', 'reviews.show')]) @if(request()->routeIs('discovery')) aria-current="page" @endif>کشف مکان‌ها</a>
         <div class="ms-auto flex items-center gap-2 sm:gap-4">
             @unless($minimal)
                 <a href="{{ route('contribute') }}" class="button-primary !px-3 !py-2 sm:!px-4" @if(request()->routeIs('contribute')) aria-current="page" @endif><span aria-hidden="true" class="text-lg font-normal">+</span><span class="sm:hidden">ثبت تجربه</span><span class="hidden sm:inline">افزودن مکان یا نوشتن نظر</span></a>

@@ -4,6 +4,14 @@ import './city-select';
 import './contribute';
 import './business-management';
 
+if (document.querySelector('#discovery, [data-location-picker]')) {
+    import('./maps').catch(() => {
+        document.querySelectorAll('[data-map-status], [data-location-status]').forEach(status => {
+            status.textContent = 'نقشه بارگذاری نشد. صفحه را تازه‌سازی کنید؛ فهرست و ورود دستی مختصات در دسترس است.';
+        });
+    });
+}
+
 document.querySelectorAll('[data-discard-draft]').forEach(button => button.addEventListener('click', async () => {
     button.disabled = true;
     try {

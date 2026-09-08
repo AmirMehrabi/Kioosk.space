@@ -11,11 +11,13 @@ class Business extends Model
 {
     use HasFactory;
 
+    public const PRICE_RANGES = [1 => 'اقتصادی', 2 => 'متوسط', 3 => 'گران', 4 => 'بسیار گران'];
+
     protected $guarded = ['id'];
 
     protected function casts(): array
     {
-        return ['phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array'];
+        return ['phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array', 'price_range' => 'integer', 'latitude' => 'float', 'longitude' => 'float'];
     }
 
     public function reviews(): HasMany

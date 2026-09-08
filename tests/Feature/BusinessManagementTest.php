@@ -11,6 +11,7 @@ use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\TestWith;
 use Tests\TestCase;
 
 class BusinessManagementTest extends TestCase
@@ -37,6 +38,7 @@ class BusinessManagementTest extends TestCase
             'phones' => [['label' => 'رزرو', 'value' => '021-12345678']],
             'websites' => [['label' => 'سایت اصلی', 'url' => 'https://example.com']],
             'weekly_hours' => $this->schedule(), 'featured_media_ids' => [$photo->id],
+            'price_range' => 2, 'latitude' => 35.7, 'longitude' => 51.4,
         ]);
 
         $response->assertRedirect()->assertSessionHasNoErrors();
@@ -44,8 +46,12 @@ class BusinessManagementTest extends TestCase
         $this->assertSame('رزرو', $business->phones[0]['label']);
         $this->assertSame('09:00', $business->weekly_hours['saturday']['shifts'][0]['opens']);
         $this->assertSame($photo->id, $business->featuredPhotos()->firstOrFail()->id);
+        $this->assertSame(2, $business->price_range);
+        $this->assertSame(35.7, $business->latitude);
+        $this->assertSame(51.4, $business->longitude);
         $this->assertDatabaseHas('moderation_history', ['content_type' => 'business', 'content_id' => (string) $business->id, 'action' => 'profile_update']);
-        $this->get(route('businesses.show', $business->slug))->assertOk()->assertSee('معرفی کامل کسب‌وکار')->assertSee('رزرو');
+        $this->get(route('businesses.show', $business->slug))->assertOk()->assertSee('معرفی کامل کسب‌وکار')->assertSee('رزرو')->assertSee('بازه قیمت: متوسط');
+        $this->get(route('business.businesses.edit', $business))->assertOk()->assertSee('data-location-picker', false)->assertSee('name="price_range"', false);
     }
 
     public function test_non_owner_cannot_access_management_and_cross_business_media_cannot_be_featured(): void
@@ -90,6 +96,60 @@ class BusinessManagementTest extends TestCase
 
         $this->actingAs($admin)->withSession(['staff_auth' => ['user_id' => $admin->id, 'verified_at' => now()->timestamp]])
             ->get(route('admin.businesses.edit', $business))->assertOk()->assertSee($business->name);
+    }
+
+    public function test_admin_can_set_price_and_location_and_owner_can_clear_them(): void
+    {
+        $admin = $this->verifiedUser(['platform_role' => PlatformRole::Admin]);
+        $owner = $this->verifiedUser();
+        $business = Business::factory()->create();
+        $business->owners()->attach($owner, ['role' => 'owner', 'approved_at' => now()]);
+        $profile = $business->only(['name', 'category_id', 'city', 'address']);
+
+        $this->actingAs($admin)->withSession(['staff_auth' => ['user_id' => $admin->id, 'verified_at' => now()->timestamp]])
+            ->put(route('admin.businesses.update', $business), $profile + ['price_range' => 4, 'latitude' => 35.75, 'longitude' => 51.45])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('businesses', ['id' => $business->id, 'price_range' => 4, 'latitude' => 35.75, 'longitude' => 51.45]);
+        $this->get(route('admin.businesses.edit', $business))->assertSee('data-location-picker', false);
+
+        $this->actingAs($owner)->put(route('business.businesses.update', $business), $profile + ['price_range' => '', 'latitude' => '', 'longitude' => ''])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('businesses', ['id' => $business->id, 'price_range' => null, 'latitude' => null, 'longitude' => null]);
+    }
+
+    #[TestWith([['price_range' => 0], 'price_range'])]
+    #[TestWith([['price_range' => 5], 'price_range'])]
+    #[TestWith([['price_range' => 1.5], 'price_range'])]
+    #[TestWith([['price_range' => 'cheap'], 'price_range'])]
+    #[TestWith([['latitude' => 35.7], 'longitude'])]
+    #[TestWith([['longitude' => 51.4], 'latitude'])]
+    #[TestWith([['latitude' => null], 'longitude'])]
+    #[TestWith([['longitude' => null], 'latitude'])]
+    #[TestWith([['latitude' => 42, 'longitude' => 51.4], 'latitude'])]
+    #[TestWith([['latitude' => 35.7, 'longitude' => 65], 'longitude'])]
+    public function test_invalid_price_or_location_does_not_modify_the_business(array $invalid, string $field): void
+    {
+        $owner = $this->verifiedUser();
+        $business = Business::factory()->create(['price_range' => 2, 'latitude' => 35.7, 'longitude' => 51.4]);
+        $business->owners()->attach($owner, ['role' => 'owner', 'approved_at' => now()]);
+
+        $this->actingAs($owner)->putJson(route('business.businesses.update', $business), $business->only(['name', 'category_id', 'city', 'address']) + $invalid)
+            ->assertUnprocessable()->assertJsonValidationErrors($field);
+
+        $this->assertDatabaseHas('businesses', ['id' => $business->id, 'price_range' => 2, 'latitude' => 35.7, 'longitude' => 51.4]);
+        $this->assertDatabaseMissing('moderation_history', ['content_id' => (string) $business->id, 'action' => 'profile_update']);
+    }
+
+    public function test_non_owner_cannot_change_price_or_location(): void
+    {
+        $business = Business::factory()->create(['price_range' => 2, 'latitude' => 35.7, 'longitude' => 51.4]);
+
+        $this->actingAs($this->verifiedUser())->putJson(route('business.businesses.update', $business), $business->only(['name', 'category_id', 'city', 'address']) + ['price_range' => 4, 'latitude' => 36, 'longitude' => 52])
+            ->assertForbidden();
+
+        $this->assertDatabaseHas('businesses', ['id' => $business->id, 'price_range' => 2, 'latitude' => 35.7, 'longitude' => 51.4]);
     }
 
     private function schedule(): array

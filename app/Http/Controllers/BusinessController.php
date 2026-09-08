@@ -18,9 +18,49 @@ class BusinessController extends Controller
     public function index(Request $request): View
     {
         $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer']]);
-        $businesses = $this->searchQuery($request)->with(['featuredPhotos', 'photos' => fn ($q) => $q->limit(1)])->withCount('reviews')->withAvg('reviews', 'rating')->latest('businesses.id')->paginate(12)->withQueryString();
+        $businesses = $this->searchQuery($request)->with(['featuredPhotos', 'photos' => fn ($query) => $query->limit(1)])
+            ->withCount('reviews')->withAvg('reviews', 'rating')->latest('businesses.id')->paginate(12)->withQueryString();
+        $recentReviews = Review::published()->whereIn('business_id', $this->searchQuery($request)->select('businesses.id'))
+            ->with(['author:id,name', 'business:id,name,slug,city', 'photos' => fn ($query) => $query->published()->latest()->limit(3)])
+            ->latest('created_at')->latest('id')->limit(6)->get();
 
-        return view('welcome', ['businesses' => $businesses, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
+        return view('welcome', [
+            'businesses' => $businesses, 'recentReviews' => $recentReviews,
+            'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get(),
+        ]);
+    }
+
+    public function discovery(Request $request): View
+    {
+        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer', 'exists:categories,id']]);
+        $cities = City::orderBy('name')->get();
+        $city = $cities->firstWhere('name', $request->input('city') ?: $request->session()->get('discovery.city'))
+            ?? $cities->firstWhere('name', 'تهران') ?? $cities->first();
+        $request->session()->put('discovery.city', $city?->name);
+        $categories = DB::table('categories')->get();
+        $term = BusinessIdentity::normalize($request->input('query') ?? '');
+        $matchingCategories = $categories->filter(fn ($category) => $term !== '' && str_contains(BusinessIdentity::normalize($category->name), $term))->pluck('id');
+        $businesses = Business::where('status', 'approved')
+            ->where('normalized_city', $city?->normalized_name)
+            ->when($term !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($term, $matchingCategories): void {
+                $query->where('normalized_name', 'like', '%'.$term.'%')
+                    ->orWhere('address', 'like', '%'.$term.'%')
+                    ->orWhereIn('category_id', $matchingCategories);
+            }))
+            ->when($request->integer('category'), fn (Builder $query, int $category) => $query->where('category_id', $category))
+            ->with(['featuredPhotos', 'photos' => fn ($query) => $query->limit(1)])
+            ->withCount('reviews')->withAvg('reviews', 'rating')
+            ->orderByDesc('reviews_count')->orderByDesc('reviews_avg_rating')->orderBy('businesses.id')
+            ->paginate(12)->appends([...$request->only('query', 'category'), 'city' => $city?->name]);
+        $mapBusinesses = $businesses->map(fn (Business $business) => [
+            'id' => $business->id, 'name' => $business->name, 'address' => $business->address,
+            'latitude' => $business->latitude, 'longitude' => $business->longitude,
+            'url' => route('businesses.show', $business->slug),
+            'rating' => $business->reviews_count ? round($business->reviews_avg_rating, 1) : null,
+            'reviews' => $business->reviews_count, 'price' => $business->price_range,
+        ]);
+
+        return view('discovery', compact('businesses', 'categories', 'cities', 'city', 'mapBusinesses'));
     }
 
     public function search(Request $request): JsonResponse

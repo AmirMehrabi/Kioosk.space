@@ -23,7 +23,7 @@
 <footer class="mx-auto flex max-w-6xl flex-col gap-4 border-t border-border px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
     <span>کیوسک؛ شهر از نگاه شما</span>
     <nav class="flex flex-wrap items-center gap-3">
-        <a class="nav-link" href="{{ route('home') }}">کشف مکان‌ها</a>
+        <a class="nav-link" href="{{ route('discovery') }}">کشف مکان‌ها</a>
         <a class="nav-link" href="{{ route('contact') }}">تماس با ما</a>
     </nav>
 </footer>

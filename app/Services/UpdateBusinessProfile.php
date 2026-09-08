@@ -24,7 +24,7 @@ class UpdateBusinessProfile
             $phones = array_values($data['phones'] ?? []);
             $websites = array_values($data['websites'] ?? []);
             $hours = $this->hours->normalize($data['weekly_hours'] ?? null);
-            $business->update(collect($data)->only(['name', 'category_id', 'city', 'address', 'description', 'latitude', 'longitude'])->all() + [
+            $business->update(collect($data)->only(['name', 'category_id', 'city', 'address', 'description', 'latitude', 'longitude', 'price_range'])->all() + [
                 'normalized_name' => BusinessIdentity::normalize($data['name']), 'normalized_city' => BusinessIdentity::normalize($data['city']), 'fingerprint' => $fingerprint,
                 'phones' => $phones, 'websites' => $websites, 'weekly_hours' => $hours, 'phone' => $phones[0]['value'] ?? null, 'website' => $websites[0]['url'] ?? null,
                 'opening_hours' => $hours ? null : $business->opening_hours,

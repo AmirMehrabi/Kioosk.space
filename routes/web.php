@@ -21,6 +21,7 @@ use App\Http\Middleware\EnsurePortalAccess;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [BusinessController::class, 'index'])->name('home');
+Route::get('/discovery', [BusinessController::class, 'discovery'])->name('discovery');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
 Route::get('/contribute', [ContributionController::class, 'create'])->middleware(AuthResponseHeaders::class)->name('contribute');

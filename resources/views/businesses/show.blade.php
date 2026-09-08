@@ -29,7 +29,7 @@
 @endif
 <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
     <div>
-        <p class="mb-3 text-sm text-muted">{{ $category }} · {{ $business->city }}</p>
+        <p class="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted"><span>{{ $category }} · {{ $business->city }}</span><x-price-range :value="$business->price_range" /></p>
         <h1 class="text-3xl font-extrabold sm:text-4xl">{{ $business->name }}</h1>
         @if($business->description)<p class="mt-4 whitespace-pre-wrap leading-8 text-secondary">{{ $business->description }}</p>@endif
         <x-review-stars class="mt-5" :rating="$business->reviews_avg_rating ?? 0" /><p class="my-5 text-xl text-pomegranate">★ {{ $business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز' }} <span class="text-sm text-muted">از {{ $business->reviews_count }} تجربه منتشرشده</span></p>
