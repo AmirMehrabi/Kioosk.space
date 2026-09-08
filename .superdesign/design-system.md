@@ -28,7 +28,7 @@ Personality: warm, trustworthy, local, composed, useful. Elegant through typogra
 - Ink: `#171717`
 - Secondary ink: `#57534E`
 - Muted: `#78716C`
-- Canvas: `#FAF8F5`
+- Canvas: `#FCFCFB`
 - Surface: `#FFFFFF`
 - Soft surface: `#F3EFE9`
 - Border: `#E5E0D8`

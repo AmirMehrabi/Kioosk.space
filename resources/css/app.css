@@ -7,7 +7,7 @@
 
 @theme {
     --font-sans: 'Vazirmatn', Tahoma, Arial, sans-serif;
-    --color-canvas: #faf8f5;
+    --color-canvas: #fcfcfb;
     --color-surface: #ffffff;
     --color-soft: #f3efe9;
     --color-border: #e5e0d8;
@@ -104,7 +104,7 @@
 .review-lightbox img { display: block; max-width: 100%; max-height: 80dvh; object-fit: contain; margin: auto; }
 .review-lightbox-close { display: block; min-height: 48px; padding: 12px 20px; margin-inline-start: auto; font: inherit; cursor: pointer; }
 
-.home-hero { background: radial-gradient(ellipse at 18% 95%, #f1e8df 0%, transparent 52%), linear-gradient(#fff 0%, #faf8f5 100%); }
+.home-hero { background: radial-gradient(ellipse at 18% 95%, #f1e8df 0%, transparent 52%), linear-gradient(#fff 0%, #fcfcfb 100%); }
 .home-hero::before { content: ''; position: absolute; width: min(44vw, 620px); aspect-ratio: 1; left: 8%; bottom: -58%; border: 1px solid #cbb9a740; border-radius: 50%; }
 .business-hero { background: #303a35; }
 .business-hero-photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
