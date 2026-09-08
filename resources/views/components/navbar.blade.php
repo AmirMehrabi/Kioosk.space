@@ -1,5 +1,5 @@
 @props(['minimal' => false, 'portal' => null])
-<header class="relative z-30 border-b border-border/70 bg-surface">
+<header @class(['relative z-30 bg-surface', 'border-b border-border/70' => ! request()->routeIs('home')])>
     <nav class="mx-auto flex min-h-22 max-w-6xl flex-wrap items-center gap-x-5 gap-y-4 px-4 py-4" aria-label="فهرست اصلی">
         <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="shrink-0"><img src="{{ asset('images/logo/logo-fa.png') }}" class="w-32 sm:w-36" alt=""></a>
         @unless($minimal)

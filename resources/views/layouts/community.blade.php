@@ -14,11 +14,14 @@
 <body class="min-h-dvh bg-canvas font-sans text-ink antialiased">
 <a href="#main" class="sr-only focus:not-sr-only">رفتن به محتوای اصلی</a>
 <x-navbar />
-<main id="main" class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+<main id="main">
+    @yield('hero')
+    <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
     @yield('breadcrumbs')
     @if(session('status'))<p role="status" class="mb-5 rounded-xl bg-positive/10 p-4 text-positive">{{ session('status') }}</p>@endif
     @if($errors->any())<div role="alert" class="mb-5 rounded-xl bg-pomegranate/10 p-4 text-pomegranate">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
     @yield('content')
+    </div>
 </main>
 <footer class="mx-auto flex max-w-6xl flex-col gap-4 border-t border-border px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
     <span>کیوسک؛ شهر از نگاه شما</span>

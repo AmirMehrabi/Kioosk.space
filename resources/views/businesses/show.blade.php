@@ -3,36 +3,38 @@
     <x-breadcrumbs :items="[['label' => $business->name]]" />
 @endsection
 @section('title', $business->name)
-@section('content')
-@if($featuredPhotos->isNotEmpty())
-    <section class="relative mb-8" aria-label="تصاویر اصلی کسب‌وکار">
-        <div @class([
-            'grid h-72 gap-1 overflow-hidden rounded-2xl bg-soft sm:h-96 lg:h-[28rem]',
-            'grid-cols-1 grid-rows-1' => $featuredPhotos->count() === 1,
-            'grid-cols-2 grid-rows-1' => $featuredPhotos->count() === 2,
-            'grid-cols-2 grid-rows-2 sm:grid-cols-4' => $featuredPhotos->count() > 2,
-        ])>
-            @foreach($featuredPhotos as $photo)
-                <a href="{{ route('media.show', $photo) }}" @class([
-                    'group relative block min-h-0 min-w-0 overflow-hidden focus-visible:z-10 focus-visible:-outline-offset-4',
-                    'row-span-2 sm:col-span-2' => $loop->first && $featuredPhotos->count() > 2,
-                    'sm:col-span-2' => ! $loop->first && $featuredPhotos->count() === 3,
-                    'sm:row-span-2' => $loop->iteration === 2 && $featuredPhotos->count() === 4,
-                    'hidden sm:block' => $loop->iteration > 3,
-                ])>
-                    <img class="absolute inset-0 h-full w-full object-cover object-center transition-transform duration-300 group-hover:scale-105 motion-reduce:transition-none" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="تصویر {{ $loop->iteration }} از {{ $business->name }}">
-                </a>
-            @endforeach
+@section('hero')
+<section class="business-hero relative isolate overflow-hidden text-white" data-business-hero data-photo-count="{{ $heroPhotos->count() }}" aria-label="تصاویر اصلی کسب‌وکار">
+    <div class="business-hero-photos absolute inset-0 grid" aria-hidden="true">
+        @foreach($heroPhotos as $photo)
+            <img class="size-full min-w-0 object-cover" src="{{ route('media.show', $photo) }}" alt="" decoding="async" @if($loop->first) fetchpriority="high" @endif>
+        @endforeach
+    </div>
+    <div class="business-hero-cover pointer-events-none absolute inset-0"></div>
+    <a href="#gallery" data-open-business-gallery class="absolute inset-0 z-10 focus-visible:-outline-offset-4" aria-label="باز کردن گالری تصاویر {{ $business->name }}"><span class="sr-only">باز کردن گالری تصاویر</span></a>
+    <div class="pointer-events-none relative z-20 mx-auto flex min-h-[26rem] max-w-6xl flex-col justify-end px-4 pt-16 pb-8 sm:min-h-[30rem] sm:pb-10">
+        <p class="mb-3 text-sm font-semibold text-white/85">{{ $category }} · {{ $business->city }}</p>
+        <h1 class="max-w-3xl text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">{{ $business->name }}</h1>
+        <div class="mt-5 flex flex-wrap items-center gap-3">
+            <x-review-stars :rating="$business->reviews_avg_rating ?? 0" />
+            <strong class="text-xl">{{ $business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز' }}</strong>
+            <a class="pointer-events-auto inline-flex min-h-11 items-center text-sm text-white/90 underline decoration-white/40 underline-offset-4 hover:decoration-white" href="#reviews">{{ $business->reviews_count }} تجربه منتشرشده</a>
+            @if($business->price_range)<span class="text-white/50" aria-hidden="true">·</span><span class="text-sm">بازه قیمت: {{ \App\Models\Business::PRICE_RANGES[$business->price_range] }} <bdi dir="ltr">{{ str_repeat('$', $business->price_range) }}</bdi></span>@endif
         </div>
-        <a class="button-secondary absolute end-4 bottom-4 shadow-soft" href="#gallery">مشاهده همه تصاویر ({{ $photos->total() }})</a>
-    </section>
-@endif
+        <div class="mt-4 flex max-w-2xl items-start gap-2 text-sm leading-7 text-white/90"><x-icon name="pin" class="mt-1 size-4" /><p>{{ $business->city }}، {{ $business->address }}</p></div>
+        <div class="mt-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-6">
+            <div class="flex items-center gap-2 text-sm"><x-icon name="clock" class="size-4" />
+                @if($hoursStatus)<p><strong class="{{ $hoursStatus['is_open'] ? 'text-emerald-200' : 'text-rose-200' }}">{{ $hoursStatus['text'] }}</strong><span class="ms-2 text-xs text-white/65">به وقت تهران</span></p>@else<p class="text-white/75">ساعت کاری مشخص نشده</p>@endif
+            </div>
+            <a href="#gallery" data-open-business-gallery class="pointer-events-auto inline-flex min-h-12 items-center gap-2 rounded-xl border border-white/65 bg-black/15 px-5 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/15"><x-icon name="grid" class="size-4" />مشاهده همه تصاویر ({{ $photos->total() }})</a>
+        </div>
+    </div>
+</section>
+@endsection
+@section('content')
 <div class="grid gap-8 lg:grid-cols-[1fr_320px]">
     <div>
-        <p class="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted"><span>{{ $category }} · {{ $business->city }}</span><x-price-range :value="$business->price_range" /></p>
-        <h1 class="text-3xl font-extrabold sm:text-4xl">{{ $business->name }}</h1>
-        @if($business->description)<p class="mt-4 whitespace-pre-wrap leading-8 text-secondary">{{ $business->description }}</p>@endif
-        <x-review-stars class="mt-5" :rating="$business->reviews_avg_rating ?? 0" /><p class="my-5 text-xl text-pomegranate">★ {{ $business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز' }} <span class="text-sm text-muted">از {{ $business->reviews_count }} تجربه منتشرشده</span></p>
+        @if($business->description)<p class="mb-6 whitespace-pre-wrap leading-8 text-secondary">{{ $business->description }}</p>@endif
         <div class="flex flex-wrap gap-3">
             @unless($isOwner)<a class="button-primary" href="{{ route('contribute', ['business' => $business->id]) }}">{{ $myReview ? 'ویرایش تجربه من' : 'نوشتن تجربه من' }}</a>@endunless
             <form method="post" action="{{ route('businesses.save', $business) }}">@csrf @if($saved)@method('delete')@endif<button class="button-secondary">{{ $saved ? 'حذف از ذخیره‌شده‌ها' : 'ذخیره مکان' }}</button></form>
@@ -74,4 +76,26 @@
     </div>
     <aside><section class="panel lg:sticky lg:top-5"><h2 class="mb-5 text-xl font-bold">آدرس و اطلاعات تماس</h2><p class="leading-8">{{ $business->city }}، {{ $business->address }}</p>@foreach($business->phones ?? ($business->phone ? [['label'=>'اصلی','value'=>$business->phone]] : []) as $phone)<a class="mt-4 flex justify-between gap-3" href="tel:{{ preg_replace('/[^+0-9]/','',$phone['value']) }}"><span>{{ $phone['label'] }}</span><bdi dir="ltr">{{ $phone['value'] }}</bdi></a>@endforeach @foreach($business->websites ?? ($business->website ? [['label'=>'وب‌سایت','url'=>$business->website]] : []) as $website)<a class="mt-4 block break-all text-pomegranate" href="{{ $website['url'] }}" rel="nofollow noopener" target="_blank">{{ $website['label'] }} ↗</a>@endforeach @if($business->weekly_hours)<h3 class="mt-6 font-bold">ساعت کار به وقت تهران</h3>@if($hoursStatus)<p class="mt-2 font-bold {{ $hoursStatus['is_open'] ? 'text-positive' : 'text-pomegranate' }}">{{ $hoursStatus['text'] }}</p>@endif<details class="mt-3"><summary class="cursor-pointer text-sm font-semibold">برنامه کامل هفته</summary><dl class="mt-3 space-y-2 text-sm">@foreach(\App\Services\BusinessHours::DAYS as $day)<div class="flex justify-between gap-3"><dt>{{ \App\Services\BusinessHours::LABELS[$day] }}</dt><dd class="text-left">@if($business->weekly_hours[$day]['closed'])تعطیل@else @foreach($business->weekly_hours[$day]['shifts'] as $shift)<span class="block" dir="ltr">{{ $shift['opens'] }}–{{ $shift['closes'] }}{{ $shift['next_day'] ? ' +1' : '' }}</span>@endforeach @endif</dd></div>@endforeach</dl></details>@elseif($business->opening_hours)<h3 class="mt-6 font-bold">ساعت کار به وقت تهران</h3><p class="mt-2 whitespace-pre-wrap text-sm leading-7">{{ $business->opening_hours }}</p>@endif</section></aside>
 </div>
+<dialog data-business-gallery data-gallery-url="{{ route('businesses.show', $business->slug) }}" class="business-gallery-dialog" aria-labelledby="business-gallery-title">
+    <div class="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
+        <div><h2 id="business-gallery-title" class="font-bold">گالری {{ $business->name }}</h2><p data-gallery-count class="mt-1 text-xs text-white/60"></p></div>
+        <button type="button" data-gallery-close class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-white/10">بستن<x-icon name="close" class="size-5" /></button>
+    </div>
+    <div class="business-gallery-body">
+        <div class="business-gallery-stage relative flex min-h-0 items-center justify-center bg-black/30">
+            <img data-gallery-image alt="" class="max-h-full max-w-full object-contain" hidden>
+            <p data-gallery-empty class="px-6 text-center text-sm text-white/70" hidden>هنوز عکسی برای این کسب‌وکار منتشر نشده است.</p>
+            <div data-gallery-navigation class="absolute inset-x-3 bottom-3 flex items-center justify-between" hidden>
+                <button type="button" data-gallery-prev class="gallery-arrow" aria-label="عکس قبلی"><x-icon name="chevron-right" /></button>
+                <span data-gallery-position class="rounded-full bg-black/60 px-3 py-1 text-xs"></span>
+                <button type="button" data-gallery-next class="gallery-arrow" aria-label="عکس بعدی"><x-icon name="chevron-left" /></button>
+            </div>
+        </div>
+        <div class="business-gallery-sidebar min-h-0 overflow-y-auto p-4">
+            <div data-gallery-thumbnails class="grid grid-cols-3 gap-2 lg:grid-cols-2"></div>
+            <p data-gallery-status role="status" aria-live="polite" class="mt-4 text-center text-sm text-white/70"></p>
+            <button type="button" data-gallery-more class="mt-4 min-h-11 w-full rounded-lg border border-white/25 px-4 text-sm hover:bg-white/10 disabled:opacity-50" hidden>تصاویر بیشتر</button>
+        </div>
+    </div>
+</dialog>
 @endsection

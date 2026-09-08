@@ -1,17 +1,17 @@
 @extends('layouts.community')
 @section('title', 'جای خوب، با تجربه آدم‌ها')
-@section('content')
-<section class="home-hero relative isolate overflow-hidden rounded-[1.75rem]" aria-labelledby="hero-title">
-    <div class="relative z-10 max-w-xl px-6 py-10 sm:px-10 sm:py-14 lg:py-16">
+@section('hero')
+<section class="home-hero relative isolate overflow-hidden" aria-labelledby="hero-title">
+    <div class="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:py-16 lg:py-20">
         <p class="mb-5 inline-flex items-center gap-2 text-xs font-bold tracking-wide text-pomegranate"><span class="size-1.5 rounded-full bg-pomegranate"></span>کیوسک · شهر از نگاه شما</p>
         <h1 id="hero-title" class="text-4xl font-extrabold leading-[1.5] tracking-tight sm:text-5xl">هر گوشهٔ شهر،<br><span class="text-pomegranate">یک تجربهٔ خوب.</span></h1>
         <p class="mt-5 max-w-sm text-sm leading-8 text-secondary sm:text-base">از قهوهٔ سرِ کوچه تا یک شام به‌یادماندنی.<br class="hidden sm:block"> جای بعدی‌ات را با تجربهٔ واقعی آدم‌ها پیدا کن.</p>
         <div class="mt-7 flex flex-wrap gap-3"><a class="button-primary shadow-soft" href="{{ route('discovery') }}">بریم کشف کنیم<x-icon name="arrow-left" class="size-4" /></a><a class="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-semibold text-secondary hover:text-pomegranate" href="#recent-reviews">تازه‌های شهر<x-icon name="chevron-down" class="size-4" /></a></div>
     </div>
-    <x-hero-city />
 </section>
-
-<section id="recent-reviews" class="scroll-mt-6 pt-12 sm:pt-16" aria-labelledby="recent-reviews-title" data-review-feed>
+@endsection
+@section('content')
+<section id="recent-reviews" class="scroll-mt-6 py-4" aria-labelledby="recent-reviews-title" data-review-feed>
     <div class="mb-7 flex flex-wrap items-end justify-between gap-3">
         <div><p class="mb-2 text-xs font-semibold text-muted">تجربه‌های کوچک، انتخاب‌های بهتر</p><h2 id="recent-reviews-title" class="text-2xl font-extrabold sm:text-3xl">تازه‌ترین تجربه‌ها</h2></div>
         <span class="inline-flex items-center gap-2 text-xs text-muted"><span class="size-1.5 rounded-full bg-positive"></span>از آدم‌های همین شهر</span>

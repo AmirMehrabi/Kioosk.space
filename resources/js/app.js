@@ -4,6 +4,7 @@ import './city-select';
 import './contribute';
 import './business-management';
 import './home-feed';
+import './business-gallery';
 
 if (document.querySelector('#discovery, [data-location-picker]')) {
     import('./maps').catch(() => {
