@@ -1,6 +1,11 @@
-import { initCalendar } from './persian-date';
+import { initCalendar } from './persian-date.js';
 
-const app = document.getElementById('contribution-app');
+export function hasMeaningfulDraft(draft) {
+    const p = draft.payload || {};
+    return !!(draft.photos?.length || p.body?.trim() || p.rating || (!p.business_id && (['name', 'city', 'address', 'description', 'category_id'].some(key => String(p[key] || '').trim()) || p.phones?.length || p.websites?.length || Object.values(p.weekly_hours || {}).some(day => !day.closed || day.shifts?.length))));
+}
+
+const app = typeof document === 'undefined' ? null : document.getElementById('contribution-app');
 if (app) startContribution().catch(error => { document.getElementById('contribution-error').hidden = false; document.getElementById('contribution-error').textContent = 'راه‌اندازی فرم انجام نشد. صفحه را دوباره باز کنید.'; });
 
 async function startContribution() {
@@ -13,18 +18,30 @@ async function startContribution() {
     let user = app.dataset.user || null, generic = app.dataset.generic === '1';
     let db, storageAvailable = true, localPersistenceEnabled = app.dataset.persistDraft === '1', saveTimer, serverTimer, version = 1, adopted = false, busy = false, uploadBusy = false, pendingSave = Promise.resolve();
     let state = { serverVersion: null, id: crypto.randomUUID(), payload: initial, photos: [], step: initial.business_id ? 3 : 1, owner: user, expires: Date.now() + 7 * 86400000 };
+    let recovered = false, searchTimer, searchSequence = 0, searchController, geographySequence = 0;
     const params = new URLSearchParams(location.search);
     const csrf = () => document.querySelector('meta[name="csrf-token"]').content;
     function status(text) { el('draft-status').textContent = text; }
     function fail(error) {
         el('contribution-error').hidden = false; el('contribution-error').textContent = error.message || 'ارتباط برقرار نشد؛ پیش‌نویس محفوظ است. دوباره تلاش کنید.';
+        let focusTarget;
         if (error.errors) Object.entries(error.errors).forEach(([key, messages]) => {
-            const target = form.querySelector(`[data-error="${key.replace(/[^a-z_]/g, '')}"]`);
+            const target = form.querySelector(`[data-error="${key.split('.')[0].replace(/[^a-z_]/g, '')}"]`);
             if (target) target.textContent = messages[0];
+            const root = key.split('.')[0].replace(/[^a-z_]/g, '');
+            const input = form.querySelector(`[name="${root}"]`) || target?.parentElement.querySelector('input, textarea, select, button');
+            if (!focusTarget && input) {
+                const section = input.closest('[data-step]');
+                if (section) showStep(Number(section.dataset.step));
+                for (let parent = input.parentElement; parent; parent = parent.parentElement) if (parent.tagName === 'DETAILS') parent.open = true;
+                focusTarget = input;
+            }
+            if (root === 'mobile' || root === 'code') { showStep(3); el('otp-panel').hidden = false; focusTarget = el(root === 'mobile' ? 'otp-mobile' : 'otp-code'); }
+
         });
         if (error.status === 409 && user) { el('draft-conflict').hidden = false; el('reload-draft').href = `/contribute?draft=${encodeURIComponent(state.id)}`; }
         if (error.edit_url) { el('conflict').hidden = false; el('edit-existing').href = error.edit_url; }
-        el('contribution-error').focus();
+        queueMicrotask(() => (focusTarget || el('contribution-error')).focus());
     }
     function clearErrors() { el('contribution-error').hidden = true; form.querySelectorAll('[data-error]').forEach(node => node.textContent = ''); }
     async function api(url, options = {}) {
@@ -42,12 +59,16 @@ async function startContribution() {
         });
         const records = await new Promise((resolve, reject) => { const r = db.transaction('drafts').objectStore('drafts').getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
         for (const record of records.filter(r => r.expires < Date.now() || r.payload?.edit_review_id)) db.transaction('drafts', 'readwrite').objectStore('drafts').delete(record.id);
-        const recover = records.filter(r => r.expires > Date.now() && !r.payload?.edit_review_id && (!r.owner || String(r.owner) === String(user)) && !r.submitted).sort((a,b) => b.savedAt - a.savedAt);
-        if (!params.has('new') && !params.has('business') && !params.has('review') && !params.has('draft') && recover[0]) state = recover[0];
+        const recover = records.filter(r => r.expires > Date.now() && !r.payload?.edit_review_id && (!r.owner || String(r.owner) === String(user)) && !r.submitted && hasMeaningfulDraft(r)).sort((a,b) => b.savedAt - a.savedAt);
+        if (!params.has('new') && !params.has('business') && !params.has('review') && !params.has('draft') && recover[0]) { state = recover[0]; recovered = true; }
         el('clear-device-drafts').hidden = false;
+        if (el('draft-tools')) el('draft-tools').hidden = !records.some(r => r.expires > Date.now() && !r.payload?.edit_review_id && hasMeaningfulDraft(r));
     } catch { storageAvailable = false; }
     function collect() {
-        for (const key of ['name', 'city', 'address', 'description', 'body', 'visit_date', 'display_name']) state.payload[key] = form.elements[key].value || null;
+        for (const key of ['name', 'city', 'address', 'description', 'body', 'visit_date', 'display_name']) {
+            if (state.payload.business_id && ['name', 'city'].includes(key)) continue;
+            state.payload[key] = form.elements[key].value || null;
+        }
         state.payload.phones = [...form.querySelectorAll('[data-contribution-phone]')].map(row => ({label:row.querySelector('[data-label]').value, value:row.querySelector('[data-value]').value})).filter(item => item.label || item.value);
         state.payload.websites = [...form.querySelectorAll('[data-contribution-website]')].map(row => ({label:row.querySelector('[data-label]').value, url:row.querySelector('[data-value]').value})).filter(item => item.label || item.url);
         state.payload.weekly_hours = Object.fromEntries([...form.querySelectorAll('[data-contribution-day]')].map(day => [day.dataset.contributionDay, {closed:day.querySelector('[data-contribution-closed]').checked, shifts:[...day.querySelectorAll('[data-contribution-shift]')].map(shift => ({opens:shift.querySelector('[data-opens]').value,closes:shift.querySelector('[data-closes]').value,next_day:shift.querySelector('[data-next-day]').checked}))}]));
@@ -58,6 +79,8 @@ async function startContribution() {
         state.payload.photo_ids = state.photos.map(p => p.client_id);
     }
     async function saveLocal() {
+        if (state.submitted) return;
+        if (!hasMeaningfulDraft(state)) { await deleteLocalDraft(state.id); status(''); return; }
         state.savedAt = Date.now(); state.expires = Date.now() + 7 * 86400000;
         if (!storageAvailable) { status('ذخیره روی دستگاه در دسترس نیست؛ این صفحه را تا ثبت نهایی باز نگه دارید.'); return; }
         if (!localPersistenceEnabled || state.payload.edit_review_id) {
@@ -71,7 +94,8 @@ async function startContribution() {
         }
         try {
             await new Promise((resolve, reject) => { const tx = db.transaction('drafts', 'readwrite'); tx.objectStore('drafts').put(state); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
-            status(user && adopted ? 'روی دستگاه ذخیره شد؛ در انتظار ذخیره در حساب…' : 'پیش‌نویس و عکس‌ها تا هفت روز روی این دستگاه ذخیره شدند.');
+            status('ذخیره شد');
+            if (el('draft-tools')) el('draft-tools').hidden = false;
         } catch { storageAvailable = false; status('فضای ذخیره‌سازی کافی نیست؛ این صفحه را تا ثبت نهایی باز نگه دارید.'); }
     }
     async function deleteLocalDraft(id) {
@@ -84,7 +108,9 @@ async function startContribution() {
         const button = el('clear-device-drafts'); button.disabled = true;
         try {
             await new Promise((resolve, reject) => { const tx = db.transaction('drafts', 'readwrite'); tx.objectStore('drafts').clear(); tx.oncomplete = resolve; tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); });
-            status('همه پیش‌نویس‌های ذخیره‌شده روی این دستگاه پاک شدند.');
+            status('پیش‌نویس‌های دستگاه پاک شدند.');
+            if (el('resume-draft')) el('resume-draft').hidden = true;
+            if (el('draft-tools')) el('draft-tools').hidden = true;
         } catch {
             status('پاک‌کردن پیش‌نویس‌های دستگاه انجام نشد؛ دوباره تلاش کنید.');
         } finally {
@@ -95,8 +121,8 @@ async function startContribution() {
         for (const key of ['name', 'city', 'category_id', 'address', 'description', 'body', 'visit_date', 'display_name']) form.elements[key].value = state.payload[key] ?? '';
         form.elements.with_review.checked = state.payload.with_review;
         form.elements.confirm_distinct.checked = !!state.payload.confirm_distinct;
-        if (state.payload.rating) form.elements.rating.value = state.payload.rating;
-        el('search-name').value = state.payload.name || ''; el('search-city').value = state.payload.city || '';
+        form.querySelectorAll('[name="rating"]').forEach(input => input.checked = Number(input.value) === Number(state.payload.rating));
+        el('search-name').value = state.payload.name || ''; if (state.payload.city) el('search-city').value = state.payload.city;
         renderStructuredProfile(); showStep(state.step); renderPhotos();
     }
     function contactRow(type, item = {}) {
@@ -118,9 +144,10 @@ async function startContribution() {
         const remove=event.target.closest('[data-contribution-remove]'); if(remove)remove.parentElement.remove();
         const addShift=event.target.closest('[data-contribution-add-shift]'); if(addShift){const day=addShift.closest('[data-contribution-day]'),list=day.querySelector('[data-contribution-shifts]');if(list.children.length<4){day.querySelector('[data-contribution-closed]').checked=false;list.append(shiftRow());}}
         const removeShift=event.target.closest('[data-contribution-remove-shift]'); if(removeShift)removeShift.parentElement.remove();
+        if (add || remove || addShift || removeShift) changed();
     });
     async function adopt() {
-        if (!user || adopted) return;
+        if (!user || adopted || !hasMeaningfulDraft(state)) return;
         const draft = await api('/contribution-drafts', {method: 'POST', body: JSON.stringify({id: state.id})});
         if (draft.status === 'submitted') { success(draft.result); return; }
         if (state.serverVersion && state.serverVersion !== draft.version) {
@@ -133,84 +160,132 @@ async function startContribution() {
         });
     }
     async function saveServer() {
-        if (!user || state.submitted) return;
+        if (!user || state.submitted || !hasMeaningfulDraft(state)) return;
         await adopt();
         if (state.submitted) return;
         const draft = await api(`/contribution-drafts/${state.id}`, {method:'PUT', body:JSON.stringify({...state.payload, version})});
-        version = draft.version; state.serverVersion = version; await saveLocal(); status('پیش‌نویس در حساب شما ذخیره شد؛ در دستگاه دیگر هم قابل ادامه است.');
+        version = draft.version; state.serverVersion = version; await saveLocal(); status('در حساب ذخیره شد');
     }
     function queueSave() {
         pendingSave = pendingSave.catch(() => {}).then(saveServer);
         pendingSave.catch(error => { status('ذخیره در حساب انجام نشد؛ نسخه دستگاه محفوظ است.'); fail(error); });
         return pendingSave;
     }
-    function changed() {
+    function changed(event) {
+        if (event && ['search-name', 'search-city', 'otp-mobile', 'otp-code'].includes(event.target.id)) return;
         collect(); status('تغییرات هنوز ذخیره نشده‌اند…'); clearTimeout(saveTimer); clearTimeout(serverTimer);
         saveTimer = setTimeout(() => saveLocal(), 300);
         if (user) serverTimer = setTimeout(queueSave, 1000);
-        el('review-fields').hidden = !state.payload.with_review;
+        showStep(state.step);
+        if (!hasMeaningfulDraft(state)) status('');
     }
     form.addEventListener('input', changed); form.addEventListener('change', changed);
     form.addEventListener('submit', event => event.preventDefault());
     function showStep(step) {
+        step = step === 4 ? 3 : step;
         state.step = step;
         form.querySelectorAll('[data-step]').forEach(section => section.hidden = Number(section.dataset.step) !== step);
-        el('stepper').querySelectorAll('li').forEach(node => { node.classList.toggle('text-pomegranate', Number(node.dataset.stepLabel) === step); node.setAttribute('aria-current', Number(node.dataset.stepLabel) === step ? 'step' : 'false'); });
-        el('previous-step').hidden = step === 1;
+        el('stepper').querySelectorAll('li').forEach(node => {
+            const active = Number(node.dataset.stepLabel) === (step === 2 ? 1 : step);
+            node.classList.toggle('text-pomegranate', active); node.setAttribute('aria-current', active ? 'step' : 'false');
+            node.textContent = Number(node.dataset.stepLabel) === 1 ? (step === 2 ? '۱. اطلاعات مکان' : '۱. پیدا کردن مکان') : (state.payload.with_review ? '۲. نوشتن نظر و ثبت' : '۲. عکس و ثبت مکان');
+        });
+        el('step-actions').hidden = step === 1;
+        el('previous-step').hidden = step === 1 || !!state.payload.edit_review_id;
         el('next-step').hidden = step === 1;
-        el('next-step').textContent = step === 4 ? (user ? 'ثبت نهایی' : 'ورود و ثبت نهایی') : 'ادامه';
+        el('next-step').textContent = step === 3 ? (state.payload.edit_review_id ? 'ثبت تغییرات نظر' : state.payload.business_id ? 'ثبت نظر' : state.payload.with_review ? 'ثبت مکان و نظر' : 'ثبت مکان') : 'ادامه و نوشتن نظر';
+        if (el('change-business')) el('change-business').hidden = !!state.payload.edit_review_id;
+        if (el('signin-hint')) el('signin-hint').hidden = !!user;
+        if (el('rating-label')) el('rating-label').textContent = ['امتیاز بدهید', 'خیلی بد', 'بد', 'متوسط', 'خوب', 'عالی'][state.payload.rating || 0];
+        form.querySelectorAll('[data-rating-value]').forEach(label => {
+            const filled = Number(label.dataset.ratingValue) <= Number(state.payload.rating || 0);
+            label.classList.toggle('text-pomegranate', filled);
+            label.dataset.selected = String(filled);
+        });
+        if (el('body-count')) el('body-count').textContent = `${(state.payload.body || '').length.toLocaleString('fa-IR')} از ۲٬۰۰۰ نویسه`;
         el('review-optional').hidden = !!state.payload.business_id;
         el('review-fields').hidden = !state.payload.with_review;
         el('selected-business').textContent = `${state.payload.name || ''} · ${state.payload.city || ''}`;
         el('review-heading').textContent = state.payload.edit_review_id ? 'ویرایش تجربه من' : 'تجربه شما';
         el('display-name-field').hidden = !user || !generic;
         el('submission-summary').textContent = state.payload.business_id ? 'تجربه روی مکان تأییدشده منتشر می‌شود. تجربه پنهان‌شده تا بررسی مدیریت خصوصی می‌ماند.' : 'مکان جدید پس از تأیید مدیریت منتشر می‌شود. تا آن زمان تجربه و عکس‌های شما خصوصی هستند.';
-        el('featured-photo-help').hidden = !!state.payload.business_id;
+        if (el('featured-photo-help')) el('featured-photo-help').hidden = true;
+    }
+    function invalidateSearch() {
+        clearTimeout(searchTimer); searchSequence++; searchController?.abort();
+        el('new-business').hidden = true; el('search-more').hidden = true;
+        el('search-results').replaceChildren(); el('search-results').setAttribute('aria-busy', 'false');
     }
     async function search(page = 1) {
-        const query = new URLSearchParams({query: el('search-name').value, city: el('search-city').value, page});
-        if (state.payload.latitude && state.payload.longitude) { query.set('latitude', state.payload.latitude); query.set('longitude', state.payload.longitude); }
-        const result = await api(`/businesses/search?${query}`);
-        if (page === 1) el('search-results').replaceChildren();
-        if (!result.data.length && page === 1) { const p = document.createElement('p'); p.textContent = 'مکانی پیدا نشد. می‌توانید مکان جدید اضافه کنید.'; el('search-results').append(p); }
-        for (const business of result.data) {
-            const button = document.createElement('button'); button.type = 'button'; button.className = 'button-secondary w-full justify-start text-right';
-            if (business.thumbnail) { const img = document.createElement('img'); img.src = business.thumbnail; img.alt = ''; img.className = 'size-16 rounded-lg object-cover'; button.append(img); }
-            const text = document.createElement('span'); text.textContent = `${business.name} — ${business.category} | ${business.city}، ${business.address}`; button.append(text);
-            button.addEventListener('click', async () => {
-                collect(); state.payload.business_id = business.id; state.payload.name = business.name; state.payload.city = business.city; state.payload.with_review = true;
-                state.payload.featured_photo_ids = [];
-                delete state.payload.edit_review_id; delete state.payload.review_version; delete state.payload.correction_business_id;
-                // A server-rendered existing-review lookup supplies the editing identity without adopting demo data.
-                if (user) {
-                    try {
-                        const html = await api(`/contribute?business=${business.id}`);
-                        const doc = new DOMParser().parseFromString(html, 'text/html');
-                        const current = JSON.parse(doc.getElementById('contribution-initial').textContent);
-                        if (current.edit_review_id) { Object.assign(state.payload, current); await deleteLocalDraft(state.id).catch(() => { storageAvailable = false; }); }
-                    } catch(error) { fail(error); return; }
-                }
-                state.step = 3; populate(); changed();
-            });
-            el('search-results').append(button);
-        }
-        el('search-more').hidden = !result.next_page_url; el('search-more').onclick = () => search(page + 1).catch(fail);
+        clearTimeout(searchTimer); searchController?.abort();
+        const sequence = ++searchSequence; searchController = new AbortController();
+        el('new-business').hidden = true; el('search-more').hidden = true;
+        el('search-results').setAttribute('aria-busy', 'true');
+        if (el('search-status')) el('search-status').textContent = 'در حال جست‌وجو…';
+        try {
+            const query = new URLSearchParams({query: el('search-name').value, city: el('search-city').value, page});
+            if (state.payload.latitude && state.payload.longitude) { query.set('latitude', state.payload.latitude); query.set('longitude', state.payload.longitude); }
+            const result = await api(`/businesses/search?${query}`, {signal: searchController.signal});
+            if (sequence !== searchSequence) return;
+            if (page === 1) el('search-results').replaceChildren();
+            if (!result.data.length && page === 1) { const p = document.createElement('p'); p.textContent = 'مکانی پیدا نشد. می‌توانید مکان جدید اضافه کنید.'; el('search-results').append(p); }
+            for (const business of result.data) {
+                const button = document.createElement('button'); button.type = 'button'; button.className = 'button-secondary w-full justify-start text-right';
+                if (business.thumbnail) { const img = document.createElement('img'); img.src = business.thumbnail; img.alt = ''; img.className = 'size-16 rounded-lg object-cover'; button.append(img); }
+                const text = document.createElement('span'); text.textContent = `${business.name} — ${business.category} | ${business.city}، ${business.address}`; button.append(text);
+                button.addEventListener('click', async () => {
+                    collect(); resetGeography(); state.payload.business_id = business.id; state.payload.name = business.name; state.payload.city = business.city; state.payload.with_review = true;
+                    state.payload.featured_photo_ids = [];
+                    delete state.payload.edit_review_id; delete state.payload.review_version; delete state.payload.correction_business_id;
+                    // A server-rendered existing-review lookup supplies the editing identity without adopting demo data.
+                    if (user) {
+                        try {
+                            const html = await api(`/contribute?business=${business.id}`);
+                            const doc = new DOMParser().parseFromString(html, 'text/html');
+                            const current = JSON.parse(doc.getElementById('contribution-initial').textContent);
+                            if (current.edit_review_id) { Object.assign(state.payload, current); await deleteLocalDraft(state.id).catch(() => { storageAvailable = false; }); }
+                        } catch(error) { fail(error); return; }
+                    }
+                    state.step = 3; populate(); changed();
+                });
+                el('search-results').append(button);
+            }
+            el('search-more').hidden = !result.next_page_url; el('search-more').onclick = () => search(page + 1);
+            el('new-business').hidden = false;
+            if (el('search-status')) el('search-status').textContent = result.data.length ? 'مکان مورد نظر را از نتایج انتخاب کنید.' : 'مکانی پیدا نشد؛ می‌توانید مکان تازه‌ای اضافه کنید.';
+        } catch (error) {
+            if (sequence !== searchSequence || error.name === 'AbortError') return;
+            if (el('search-status')) el('search-status').textContent = 'جست‌وجو انجام نشد؛ دوباره تلاش کنید.';
+        } finally { if (sequence === searchSequence) el('search-results').setAttribute('aria-busy', 'false'); }
     }
+    function resetGeography() { geographySequence++; delete state.payload.latitude; delete state.payload.longitude; el('gps-status').textContent = 'موقعیت فقط با درخواست شما دریافت می‌شود.'; }
+    [el('search-name'), el('search-city')].forEach(input => input.addEventListener('input', () => {
+        invalidateSearch(); resetGeography();
+        if (el('search-status')) el('search-status').textContent = '';
+        if (el('search-name').value.trim() || el('search-city').value.trim()) searchTimer = setTimeout(() => search(), 350);
+    }));
+    el('new-business').hidden = true;
+    el('change-business')?.addEventListener('click', () => {
+        if (busy || state.payload.edit_review_id) return;
+        collect(); resetGeography(); invalidateSearch(); showStep(1); el('search-name').focus(); saveLocal();
+    });
     el('search-businesses').addEventListener('click', () => search().catch(fail));
     [el('search-name'), el('search-city')].forEach(input => input.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); search().catch(fail); } }));
     el('new-business').addEventListener('click', () => {
-        collect(); state.payload.name = el('search-name').value; state.payload.city = el('search-city').value;
+        collect(); resetGeography(); state.payload.confirm_distinct = false; state.payload.name = el('search-name').value; state.payload.city = el('search-city').value;
         delete state.payload.business_id; delete state.payload.edit_review_id; delete state.payload.review_version; delete state.payload.correction_business_id;
         state.step = 2; populate(); changed();
     });
     el('locate').addEventListener('click', () => {
         if (!navigator.geolocation) { el('gps-status').textContent = 'موقعیت در دسترس نیست؛ نام و شهر را وارد کنید.'; return; }
         el('gps-status').textContent = 'در حال دریافت موقعیت…';
+        const geographyRequest = ++geographySequence;
         navigator.geolocation.getCurrentPosition(position => {
+            if (geographyRequest !== geographySequence || state.step !== 1) return;
             const {latitude, longitude} = position.coords;
             if (latitude < 24 || latitude > 41 || longitude < 43 || longitude > 64) { el('gps-status').textContent = 'موقعیت خارج از محدوده ایران است؛ شهر را دستی وارد کنید.'; return; }
             Object.assign(state.payload, {latitude, longitude}); el('gps-status').textContent = 'موقعیت دریافت شد؛ نتایج نزدیک‌تر اول نمایش داده می‌شوند.'; changed(); search().catch(fail);
-        }, () => { el('gps-status').textContent = 'دسترسی به موقعیت ممکن نشد؛ بدون آن ادامه دهید.'; }, {timeout: 10000, maximumAge: 300000});
+        }, () => { if (geographyRequest !== geographySequence) return; el('gps-status').textContent = 'دسترسی به موقعیت ممکن نشد؛ بدون آن ادامه دهید.'; }, {timeout: 10000, maximumAge: 300000});
     });
     async function compress(file) {
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('این قالب پشتیبانی نمی‌شود. عکس HEIC را در گالری به JPEG تبدیل و دوباره انتخاب کنید؛ پیش‌نویس محفوظ است.');
@@ -230,6 +305,7 @@ async function startContribution() {
             try { const blob = await compress(file); state.photos.push({client_id: crypto.randomUUID(), blob, name: file.name, status:'selected', progress:0}); }
             catch(error) { fail(error); }
         }
+        if (!state.payload.business_id && !state.payload.featured_photo_ids?.length && state.photos.length) state.payload.featured_photo_ids = [state.photos[0].client_id];
         collect(); renderPhotos(); await saveLocal();
         if (user) { await queueSave(); await uploadAll(); }
     }
@@ -250,14 +326,19 @@ async function startContribution() {
                     if (photo.server_id) await api(`/contribution-drafts/${state.id}/photos/${photo.server_id}`, {method:'DELETE'});
                     state.photos = state.photos.filter(p => p.client_id !== photo.client_id); URL.revokeObjectURL(previewUrls.get(photo.client_id)); previewUrls.delete(photo.client_id);
                     state.payload.featured_photo_ids = (state.payload.featured_photo_ids || []).filter(id => id !== photo.client_id);
+                    if (!state.payload.business_id && !state.payload.featured_photo_ids.length && state.photos.length) state.payload.featured_photo_ids = [state.photos[0].client_id];
                     collect(); renderPhotos(); await saveLocal(); if(user) await queueSave();
                 } catch(error) { fail(error); }
             });
             card.append(img,label,progress,remove);
             if (!state.payload.business_id) {
-                const selected=(state.payload.featured_photo_ids||[]).includes(photo.client_id); const feature=document.createElement('button'); feature.type='button'; feature.className='button-secondary mt-2 w-full'; feature.textContent=selected?`نمای اصلی ${state.payload.featured_photo_ids.indexOf(photo.client_id)+1}`:'افزودن به نمای اصلی';
-                feature.addEventListener('click',()=>{const ids=state.payload.featured_photo_ids||[];state.payload.featured_photo_ids=selected?ids.filter(id=>id!==photo.client_id):(ids.length<5?[...ids,photo.client_id]:ids);renderPhotos();changed();});card.append(feature);
-                if(selected){const controls=document.createElement('div');controls.className='mt-2 flex justify-between';for(const [text,direction] of [['→',-1],['←',1]]){const move=document.createElement('button');move.type='button';move.textContent=text;move.className='button-secondary';move.addEventListener('click',()=>{const ids=state.payload.featured_photo_ids,index=ids.indexOf(photo.client_id),target=index+direction;if(target>=0&&target<ids.length){[ids[index],ids[target]]=[ids[target],ids[index]];renderPhotos();changed();}});controls.append(move);}card.append(controls);}
+                const selected = state.payload.featured_photo_ids?.[0] === photo.client_id;
+                const feature = document.createElement('button'); feature.type = 'button'; feature.className = 'button-secondary mt-2 w-full';
+                feature.textContent = selected ? 'عکس اصلی مکان' : 'انتخاب به‌عنوان عکس اصلی'; feature.disabled = selected || busy;
+                feature.addEventListener('click', () => {
+                    state.payload.featured_photo_ids = [photo.client_id, ...(state.payload.featured_photo_ids || []).filter(id => id !== photo.client_id)].slice(0, 5);
+                    renderPhotos(); changed();
+                }); card.append(feature);
             }
             if (photo.status === 'failed') { const retry = document.createElement('button'); retry.type = 'button'; retry.className='button-secondary mt-2 w-full'; retry.textContent='تلاش دوباره'; retry.addEventListener('click', () => uploadPhoto(photo).catch(fail)); card.append(retry); }
             el('photo-previews').append(card);
@@ -287,17 +368,29 @@ async function startContribution() {
     }
     el('previous-step').addEventListener('click', () => { collect(); showStep(state.step === 3 && state.payload.business_id ? 1 : state.step - 1); saveLocal(); });
     function validateStep() {
-        const missing = state.step === 2 ? ['name','category_id','city','address'].find(k => !state.payload[k]) : null;
+        const missing = state.step === 2 ? ['name','category_id','city','address'].find(k => !String(state.payload[k] || '').trim()) : null;
         if(missing) { fail({message:'اطلاعات ضروری مکان را کامل کنید.',errors:{[missing]:['این قسمت را کامل کنید.']}}); return false; }
-        if(state.step === 3 && state.payload.with_review && (!state.payload.rating || (state.payload.body || '').trim().length < 10)) { fail(new Error('امتیاز و تجربه‌ای با حداقل ۱۰ نویسه وارد کنید.')); return false; }
-        if(state.step === 3 && state.payload.with_review && !form.elements.visit_date.value.trim()) { state.payload.visit_date = initial.visit_date; form.elements.visit_date.value = initial.visit_date; }
+        if (state.step === 2 && !state.payload.confirm_distinct) { fail({message:'متفاوت بودن مکان را تأیید کنید.', errors:{confirm_distinct:['این تأیید لازم است.']}}); return false; }
+        if (state.step === 3 && state.payload.with_review) {
+            const errors = {};
+            if (!state.payload.rating) errors.rating = ['امتیاز خود را انتخاب کنید.'];
+            const length = (state.payload.body || '').trim().length;
+            if (length < 10 || length > 2000) errors.body = ['تجربه‌ای بین ۱۰ تا ۲۰۰۰ نویسه بنویسید.'];
+            if (Object.keys(errors).length) { fail({message:'نظر خود را کامل کنید.', errors}); return false; }
+        }
         return true;
     }
+    el('place-only')?.addEventListener('click', async () => {
+        if (busy) return; clearErrors(); collect();
+        if (!validateStep()) return;
+        state.payload.with_review = false; form.elements.with_review.checked = false; showStep(3);
+        changed(); await saveLocal(); el('review-heading').focus();
+    });
     function setBusy(value) { busy=value; form.querySelectorAll('input, textarea, select').forEach(input => input.disabled = value); el('next-step').disabled=value; el('previous-step').disabled=value; el('gallery-input').disabled=value; el('camera-input').disabled=value; renderPhotos(); }
     el('next-step').addEventListener('click', async () => {
         if(busy) return; clearErrors(); collect();
         if(!validateStep()) return;
-        if(state.step < 4) { showStep(state.step+1); await saveLocal(); form.querySelector(`[data-step="${state.step}"] h2`).focus(); return; }
+        if(state.step === 2) { state.payload.with_review = true; form.elements.with_review.checked = true; showStep(3); await saveLocal(); form.querySelector(`[data-step="${state.step}"] h2`).focus(); return; }
         if(!user) { await saveLocal(); el('otp-panel').hidden=false; el('otp-mobile').focus(); return; }
         setBusy(true);
         try {
@@ -328,16 +421,18 @@ async function startContribution() {
         if(!authenticated.user_id) throw new Error('ورود کامل نشد؛ دوباره تلاش کنید.');
         document.querySelector('meta[name="csrf-token"]').content=authenticated.csrf_token;
         user=String(authenticated.user_id); generic=authenticated.needs_display_name; state.owner=user;
-        el('otp-panel').hidden=true; el('otp-code').value=''; el('otp-mobile').value=''; showStep(4);
+        el('otp-panel').hidden=true; el('otp-code').value=''; el('otp-mobile').value=''; showStep(3);
         await adopt(); await saveLocal(); await queueSave(); await uploadAll();
     }));
     if(params.has('draft') && user) {
         const draft = await api(`/contribution-drafts/${encodeURIComponent(params.get('draft'))}`);
-        state = {serverVersion:draft.version,id:draft.id,payload:draft.payload,photos:draft.photos.map(p => ({client_id:p.client_id,server_id:p.id,status:'uploaded'})),step:draft.payload.business_id ? 3 : 2,owner:user,expires:Date.now()+7*86400000}; version=draft.version; adopted=true;
-        if(draft.status==='submitted') success(draft.result);
+        state = {serverVersion:draft.version,id:draft.id,payload:draft.payload,photos:draft.photos.map(p => ({client_id:p.client_id,server_id:p.id,status:'uploaded'})),step:draft.payload.business_id ? 3 : 2,owner:user,expires:Date.now()+7*86400000}; version=draft.version; adopted=true; recovered=hasMeaningfulDraft(state);
+        if(draft.status==='submitted') { success(draft.result); return; }
     }
     state.photos.forEach(p => { if(p.status==='uploading') p.status='selected'; });
-    populate(); initCalendar(form.elements.visit_date); await saveLocal();
-    if(user && !state.submitted) { try { await adopt(); await queueSave(); } catch(error) { fail(error); } }
-    window.addEventListener('beforeunload', event => { if(!state.submitted && (!storageAvailable || uploadBusy || busy)) { event.preventDefault(); event.returnValue=''; } });
+    if (!recovered && !state.payload.edit_review_id) state.payload.visit_date = null;
+    if (el('resume-draft')) el('resume-draft').hidden = !recovered;
+    status(recovered ? 'پیش‌نویس بازیابی شد' : '');
+    populate(); initCalendar(form.elements.visit_date);
+    window.addEventListener('beforeunload', event => { if(!state.submitted && hasMeaningfulDraft(state) && (!storageAvailable || uploadBusy || busy)) { event.preventDefault(); event.returnValue=''; } });
 }

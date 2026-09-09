@@ -13,7 +13,7 @@
 </head>
 <body class="min-h-dvh bg-canvas font-sans text-ink antialiased">
 <a href="#main" class="sr-only focus:not-sr-only">رفتن به محتوای اصلی</a>
-<x-navbar />
+<x-navbar :minimal="request()->routeIs('contribute', 'reviews.edit')" />
 <main id="main">
     @yield('hero')
     <div class="mx-auto max-w-6xl px-4 py-8 sm:py-12">
