@@ -6,6 +6,13 @@ import './business-management';
 import './home-feed';
 import './business-gallery';
 
+document.querySelectorAll('img[data-media-skeleton]').forEach(image => {
+    const reveal = () => image.classList.add('media-loaded');
+    if (image.complete && image.naturalWidth > 0) reveal();
+    else image.addEventListener('load', reveal, {once: true});
+    image.addEventListener('error', reveal, {once: true});
+});
+
 if (document.querySelector('#discovery, [data-location-picker]')) {
     import('./maps').catch(() => {
         document.querySelectorAll('[data-map-status], [data-location-status]').forEach(status => {

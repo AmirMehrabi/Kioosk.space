@@ -2,7 +2,7 @@
 @section('title', 'جای خوب، با تجربه آدم‌ها')
 @section('hero')
 <section class="home-hero relative isolate overflow-hidden bg-ink text-white" aria-labelledby="hero-title">
-    <img class="absolute inset-0 -z-20 h-full w-full object-cover" src="{{ $featuredBusiness ? route('media.show', $featuredBusiness->heroPhoto) : asset('images/businesses/cafe-counter.jpg') }}" alt="{{ $featuredBusiness ? 'فضای '.$featuredBusiness->name : '' }}" fetchpriority="high" decoding="async">
+    <img data-media-skeleton class="media-skeleton absolute inset-0 -z-20 h-full w-full object-cover" src="{{ $featuredBusiness ? route('media.show', $featuredBusiness->heroPhoto) : asset('images/businesses/cafe-counter.jpg') }}" alt="{{ $featuredBusiness ? 'فضای '.$featuredBusiness->name : '' }}" fetchpriority="high" decoding="async">
     <div class="home-hero-shade absolute inset-0 -z-10" aria-hidden="true"></div>
     <div class="relative mx-auto flex min-h-140 max-w-6xl flex-col justify-between gap-12 px-5 py-10 sm:min-h-148 sm:px-6 sm:py-12 lg:min-h-152 lg:px-4">
         <div class="flex max-w-lg flex-col items-start gap-6">

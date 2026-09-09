@@ -145,3 +145,7 @@
 .contribution-star:hover { background: var(--color-pomegranate-dark); color: white; }
 .contribution-star[data-hovered='true'] { background: var(--color-pomegranate); color: white; }
 .contribution-search-result:focus-visible { outline: 2px solid var(--color-pomegranate); outline-offset: 3px; }
+.media-skeleton { background: linear-gradient(110deg, #f3efe9 8%, #faf8f5 18%, #f3efe9 33%); background-size: 200% 100%; animation: media-shimmer 1.4s linear infinite; opacity: .7; transition: opacity .2s ease; }
+.media-skeleton.media-loaded { animation: none; opacity: 1; }
+@keyframes media-shimmer { to { background-position-x: -200%; } }
+@media (prefers-reduced-motion: reduce) { .media-skeleton { animation: none; } }

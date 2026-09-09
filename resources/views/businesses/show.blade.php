@@ -7,7 +7,7 @@
 <section class="business-hero relative isolate overflow-hidden text-white" data-business-hero data-photo-count="{{ $heroPhotos->count() }}" aria-label="تصاویر اصلی کسب‌وکار">
     <div class="business-hero-photos absolute inset-0 grid" aria-hidden="true">
         @foreach($heroPhotos as $photo)
-            <img class="size-full min-w-0 object-cover" src="{{ route('media.show', $photo) }}" alt="" decoding="async" @if($loop->first) fetchpriority="high" @endif>
+            <img data-media-skeleton class="media-skeleton size-full min-w-0 object-cover" src="{{ route('media.show', $photo) }}" alt="" decoding="async" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif>
         @endforeach
     </div>
     <div class="business-hero-cover pointer-events-none absolute inset-0"></div>
@@ -43,7 +43,7 @@
         <section class="mt-9 scroll-mt-6" id="gallery" aria-labelledby="gallery-title">
             <h2 id="gallery-title" class="mb-4 text-xl font-bold">گالری تصاویر</h2>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                @forelse($photos as $photo)<div><a href="{{ route('media.show', $photo) }}" target="_blank" rel="noopener"><img class="h-48 w-full rounded-xl object-cover sm:h-64" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس {{ $business->name }}" loading="lazy"></a>@if(auth()->id() === $photo->user_id)<form method="post" action="{{ route('media.destroy', $photo) }}">@csrf @method('delete')<button class="button-secondary mt-1">حذف عکس من</button></form>@endif
+                @forelse($photos as $photo)<div><a href="#gallery" data-open-business-gallery aria-label="باز کردن عکس {{ $loop->iteration }} در گالری"><img data-media-skeleton class="media-skeleton h-48 w-full rounded-xl object-cover sm:h-64" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس {{ $business->name }}" loading="lazy" width="600" height="400"></a>@if(auth()->id() === $photo->user_id)<form method="post" action="{{ route('media.destroy', $photo) }}">@csrf @method('delete')<button class="button-secondary mt-1">حذف عکس من</button></form>@endif
                 @include('contributions.report-form', ['type' => 'media', 'contentId' => $photo->id])</div>
                 @empty<p class="text-sm text-muted">هنوز عکسی ثبت نشده است.</p>@endforelse
             </div><div class="mt-4">{{ $photos->withQueryString()->links() }}</div>
@@ -60,7 +60,7 @@
                     <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-bold">{{ $review->author->name }}</h3><x-review-stars :rating="$review->rating" /></div>
                     <p class="mt-2 text-xs text-muted">بازدید {{ \App\Support\PersianDate::format($review->visit_date) }}</p>
                     <p class="my-5 whitespace-pre-wrap leading-8">{{ $review->body }}</p>
-                    <div class="flex gap-2">@foreach($review->photos as $photo)<a href="{{ route('media.show', $photo) }}"><img class="size-20 rounded-lg object-cover" loading="lazy" alt="عکس تجربه" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}"></a>@endforeach</div>
+                    <div class="flex gap-2">@foreach($review->photos as $photo)<a href="#gallery" data-open-business-gallery aria-label="باز کردن عکس تجربه در گالری"><img data-media-skeleton class="media-skeleton size-20 rounded-lg object-cover" loading="lazy" alt="عکس تجربه" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" width="80" height="80"></a>@endforeach</div>
                     <div class="mt-4 flex flex-wrap gap-2">
                         <form method="post" action="{{ route('reviews.helpful', $review) }}">@csrf @if(in_array($review->id, $votes))@method('delete')@endif<button class="button-secondary">{{ in_array($review->id, $votes) ? 'حذف رأی مفید' : 'مفید بود' }} · {{ $review->helpful_count }}</button></form>
                         <a class="button-secondary" href="{{ route('reviews.show', $review) }}">گفت‌وگو</a>
@@ -83,7 +83,7 @@
     </div>
     <div class="business-gallery-body">
         <div class="business-gallery-stage relative flex min-h-0 items-center justify-center bg-black/30">
-            <img data-gallery-image alt="" class="max-h-full max-w-full object-contain" hidden>
+            <img data-gallery-image alt="" class="media-skeleton max-h-full max-w-full object-contain" hidden>
             <p data-gallery-empty class="px-6 text-center text-sm text-white/70" hidden>هنوز عکسی برای این کسب‌وکار منتشر نشده است.</p>
             <div data-gallery-navigation class="absolute inset-x-3 bottom-3 flex items-center justify-between" hidden>
                 <button type="button" data-gallery-prev class="gallery-arrow" aria-label="عکس قبلی"><x-icon name="chevron-right" /></button>

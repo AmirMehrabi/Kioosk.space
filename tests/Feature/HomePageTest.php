@@ -25,7 +25,8 @@ class HomePageTest extends TestCase
         $response->assertOk()->assertSee('جای خوب،')->assertSee('همین دوروبره.')
             ->assertSee('تازه‌ترین تجربه‌ها')->assertSee('امروز دنبال چی می‌گردی؟')->assertSee(route('discovery'))
             ->assertSee('id="navbar-query"', false)->assertDontSee('id="places"', false)
-            ->assertDontSee('id="discovery-map"', false)->assertDontSee('id="discovery-data"', false);
+            ->assertDontSee('id="discovery-map"', false)->assertDontSee('id="discovery-data"', false)
+            ->assertSee('data-media-skeleton', false);
         $this->assertSame([$rasht->id, $tehran->id], $response->viewData('recentReviews')->pluck('id')->all());
         $this->get(route('discovery'))->assertOk()->assertViewIs('discovery')->assertSee('id="discovery-map"', false)
             ->assertSee('action="'.route('discovery').'#places"', false);

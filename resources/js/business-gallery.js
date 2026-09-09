@@ -18,9 +18,12 @@ if (gallery) {
     function select(index) {
         if (!photos[index]) return;
         selected = index;
+        image.classList.remove('media-loaded');
         image.src = photos[index].url;
         image.alt = photos[index].alt;
         image.hidden = false;
+        if (image.complete && image.naturalWidth > 0) image.classList.add('media-loaded');
+        else image.addEventListener('load', () => image.classList.add('media-loaded'), {once: true});
         thumbnails.querySelectorAll('button').forEach((button, position) => button.setAttribute('aria-pressed', String(position === index)));
         gallery.querySelector('[data-gallery-position]').textContent = `${(index + 1).toLocaleString('fa-IR')} / ${photos.length.toLocaleString('fa-IR')}`;
         gallery.querySelector('[data-gallery-navigation]').hidden = photos.length < 2;
@@ -50,7 +53,9 @@ if (gallery) {
                 thumbnail.src = photo.thumbnail;
                 thumbnail.alt = '';
                 thumbnail.loading = 'lazy';
-                thumbnail.className = 'size-full object-cover';
+                thumbnail.className = 'media-skeleton size-full object-cover';
+                thumbnail.addEventListener('load', () => thumbnail.classList.add('media-loaded'), {once: true});
+                if (thumbnail.complete && thumbnail.naturalWidth > 0) thumbnail.classList.add('media-loaded');
                 button.append(thumbnail);
                 button.addEventListener('click', () => select(index));
                 thumbnails.append(button);

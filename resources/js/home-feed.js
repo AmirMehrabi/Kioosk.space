@@ -50,6 +50,8 @@ if (feed) {
     close.className = 'review-lightbox-close';
     close.textContent = 'بستن ×';
     const image = document.createElement('img');
+    image.className = 'media-skeleton';
+    image.addEventListener('load', () => image.classList.add('media-loaded'), {once: true});
     dialog.append(close, image);
     document.body.append(dialog);
     let trigger;

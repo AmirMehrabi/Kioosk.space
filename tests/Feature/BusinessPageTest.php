@@ -51,7 +51,8 @@ class BusinessPageTest extends TestCase
         $response = $this->get('/businesses/'.$business->slug);
 
         $response->assertOk()->assertSeeInOrder(['aria-label="تصاویر اصلی کسب‌وکار"', 'href="#gallery"', '<h1', 'id="gallery"'], false)
-            ->assertSee('مشاهده همه تصاویر ('.$photoCount.')');
+            ->assertSee('مشاهده همه تصاویر ('.$photoCount.')')
+            ->assertSee('data-open-business-gallery', false)->assertSee('data-media-skeleton', false);
         foreach ($business->photos as $photo) {
             $response->assertSee(route('media.show', [$photo, 'thumbnail' => 1]));
         }

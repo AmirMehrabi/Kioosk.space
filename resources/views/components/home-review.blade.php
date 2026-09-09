@@ -15,7 +15,7 @@
         <div class="review-gallery mx-5 mb-4" data-photo-count="{{ $review->photos->count() }}" aria-label="عکس‌های تجربه">
             @foreach($review->photos as $photo)
                 <a href="{{ route('media.show', $photo) }}" data-review-photo data-full-image="{{ route('media.show', $photo) }}" class="group relative min-h-0 min-w-0 overflow-hidden bg-soft" aria-label="مشاهده عکس {{ $loop->iteration }} از تجربه در {{ $review->business->name }}">
-                    <img class="size-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس تجربه در {{ $review->business->name }}" loading="lazy" width="400" height="300">
+                    <img data-media-skeleton class="media-skeleton size-full object-cover transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس تجربه در {{ $review->business->name }}" loading="lazy" width="400" height="300">
                 </a>
             @endforeach
         </div>
