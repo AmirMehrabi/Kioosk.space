@@ -22,7 +22,7 @@ class HomePageTest extends TestCase
 
         $response = $this->withSession(['discovery.city' => 'رشت'])->get(route('home'));
 
-        $response->assertOk()->assertSee('هر گوشهٔ شهر،')->assertSee('یک تجربهٔ خوب.')
+        $response->assertOk()->assertSee('جای خوب،')->assertSee('همین دوروبره.')
             ->assertSee('تازه‌ترین تجربه‌ها')->assertSee('امروز دنبال چی می‌گردی؟')->assertSee(route('discovery'))
             ->assertSee('id="navbar-query"', false)->assertDontSee('id="places"', false)
             ->assertDontSee('id="discovery-map"', false)->assertDontSee('id="discovery-data"', false);

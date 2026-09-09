@@ -1,12 +1,28 @@
 @extends('layouts.community')
 @section('title', 'جای خوب، با تجربه آدم‌ها')
 @section('hero')
-<section class="home-hero relative isolate overflow-hidden" aria-labelledby="hero-title">
-    <div class="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:py-16 lg:py-20">
-        <p class="mb-5 inline-flex items-center gap-2 text-xs font-bold tracking-wide text-pomegranate"><span class="size-1.5 rounded-full bg-pomegranate"></span>کیوسک · شهر از نگاه شما</p>
-        <h1 id="hero-title" class="text-4xl font-extrabold leading-[1.5] tracking-tight sm:text-5xl">هر گوشهٔ شهر،<br><span class="text-pomegranate">یک تجربهٔ خوب.</span></h1>
-        <p class="mt-5 max-w-sm text-sm leading-8 text-secondary sm:text-base">از قهوهٔ سرِ کوچه تا یک شام به‌یادماندنی.<br class="hidden sm:block"> جای بعدی‌ات را با تجربهٔ واقعی آدم‌ها پیدا کن.</p>
-        <div class="mt-7 flex flex-wrap gap-3"><a class="button-primary shadow-soft" href="{{ route('discovery') }}">بریم کشف کنیم<x-icon name="arrow-left" class="size-4" /></a><a class="inline-flex min-h-11 items-center gap-2 px-3 text-sm font-semibold text-secondary hover:text-pomegranate" href="#recent-reviews">تازه‌های شهر<x-icon name="chevron-down" class="size-4" /></a></div>
+<section class="home-hero relative isolate overflow-hidden bg-ink text-white" aria-labelledby="hero-title">
+    <img class="absolute inset-0 -z-20 h-full w-full object-cover" src="{{ $featuredBusiness ? route('media.show', $featuredBusiness->heroPhoto) : asset('images/businesses/cafe-counter.jpg') }}" alt="{{ $featuredBusiness ? 'فضای '.$featuredBusiness->name : '' }}" fetchpriority="high" decoding="async">
+    <div class="home-hero-shade absolute inset-0 -z-10" aria-hidden="true"></div>
+    <div class="relative mx-auto flex min-h-140 max-w-6xl flex-col justify-between gap-12 px-5 py-10 sm:min-h-148 sm:px-6 sm:py-12 lg:min-h-152 lg:px-4">
+        <div class="flex max-w-lg flex-col items-start gap-6">
+            <p class="inline-flex items-center gap-2.5 text-xs font-semibold text-white/90"><span class="h-px w-7 bg-white/70" aria-hidden="true"></span>کیوسک · شهر از نگاه شما</p>
+            <h1 id="hero-title" class="text-[2.5rem] font-extrabold leading-[1.45] tracking-tight sm:text-5xl lg:text-[3.5rem]">جای خوب،<br>همین دوروبره.</h1>
+            <p class="max-w-sm text-sm leading-8 text-white/90 sm:text-base">کافهٔ دنج، غذای خوش‌طعم، یک کشف تازه.<br>با تجربهٔ واقعی آدم‌ها، جای بعدی‌ات را پیدا کن.</p>
+            <a class="button-primary min-w-44 gap-5 !rounded-lg !py-3.5" href="{{ route('discovery') }}">بریم کشف کنیم<x-icon name="arrow-left" class="size-4" /></a>
+        </div>
+        <div class="flex flex-wrap items-end justify-between gap-6 border-t border-white/25 pt-6">
+            @if($featuredBusiness)
+                <div class="flex max-w-xl flex-col items-start gap-2">
+                    <p class="inline-flex items-center gap-2 text-xs text-white/80"><x-icon name="pin" class="size-3.5" />{{ $featuredBusiness->city }}<span aria-hidden="true">·</span>پیشنهاد کیوسک</p>
+                    <a class="group inline-flex min-h-11 items-center gap-4 text-xl font-bold sm:text-2xl" href="{{ route('businesses.show', $featuredBusiness->slug) }}">{{ $featuredBusiness->name }}<x-icon name="arrow-left" class="size-5 transition-transform group-hover:-translate-x-1 motion-reduce:transform-none" /></a>
+                    <p class="max-w-lg text-sm leading-7 text-white/85">{{ \Illuminate\Support\Str::limit($featuredBusiness->description ?: 'این‌جا را بشناس؛ عکس‌ها و تجربه‌های دیگران را ببین و برای سر زدن تصمیم بگیر.', 140) }}</p>
+                </div>
+            @else
+                <p class="flex items-center gap-3 text-sm leading-7 text-white/85"><x-icon name="compass" class="size-5" />یک جای تازه، یک تجربهٔ تازه.</p>
+            @endif
+            <a class="inline-flex min-h-11 shrink-0 items-center gap-3 text-sm font-semibold text-white/90 hover:text-white" href="#recent-reviews">از نگاه آدم‌های شهر<x-icon name="chevron-down" class="size-4" /></a>
+        </div>
     </div>
 </section>
 @endsection

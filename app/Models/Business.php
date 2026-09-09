@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -17,7 +18,12 @@ class Business extends Model
 
     protected function casts(): array
     {
-        return ['phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array', 'price_range' => 'integer', 'latitude' => 'float', 'longitude' => 'float'];
+        return ['is_featured' => 'boolean', 'phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array', 'price_range' => 'integer', 'latitude' => 'float', 'longitude' => 'float'];
+    }
+
+    public function heroPhoto(): BelongsTo
+    {
+        return $this->belongsTo(Media::class, 'hero_media_id')->published();
     }
 
     public function reviews(): HasMany

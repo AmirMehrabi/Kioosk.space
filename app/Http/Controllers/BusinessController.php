@@ -30,6 +30,9 @@ class BusinessController extends Controller
         }
 
         return view('welcome', [
+            'featuredBusiness' => Business::where('status', 'approved')->where('is_featured', true)
+                ->whereHas('heroPhoto', fn (Builder $query) => $query->whereColumn('media.business_id', 'businesses.id'))
+                ->with('heroPhoto')->orderBy('businesses.id')->first(),
             'recentReviews' => $recentReviews,
             'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get(),
         ]);

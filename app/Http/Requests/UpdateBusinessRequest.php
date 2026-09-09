@@ -17,6 +17,9 @@ class UpdateBusinessRequest extends FormRequest
         if (! $this->user() || ! $business instanceof Business) {
             return false;
         }
+        if ($this->hasAny(['is_featured', 'hero_media_id']) && (! $this->routeIs('admin.*') || ! $this->user()->hasStaffAccess())) {
+            return false;
+        }
         if ($this->routeIs('admin.*')) {
             return $this->user()->hasStaffAccess();
         }
@@ -27,6 +30,8 @@ class UpdateBusinessRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'is_featured' => ['sometimes', 'boolean'],
+            'hero_media_id' => ['nullable', 'uuid'],
             'name' => ['required', 'string', 'max:180'], 'category_id' => ['required', 'integer', 'exists:categories,id'],
             'city' => ['required', 'string', 'exists:cities,name'], 'address' => ['required', 'string', 'max:500'],
             'description' => ['nullable', 'string', 'max:3000'],
@@ -44,6 +49,16 @@ class UpdateBusinessRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator): void {
+            if ($this->hasAny(['is_featured', 'hero_media_id']) && ! $validator->errors()->hasAny(['is_featured', 'hero_media_id'])) {
+                $business = $this->route('business');
+                $isFeatured = $this->has('is_featured') ? $this->boolean('is_featured') : $business->is_featured;
+                $heroMediaId = $this->has('hero_media_id') ? $this->input('hero_media_id') : $business->hero_media_id;
+                if ($isFeatured && ! $heroMediaId) {
+                    $validator->errors()->add('hero_media_id', 'برای نمایش در صفحه اصلی، یک تصویر انتخاب کنید.');
+                } elseif ($heroMediaId && ! Media::published()->whereKey($heroMediaId)->where('business_id', $business->id)->exists()) {
+                    $validator->errors()->add('hero_media_id', 'تصویر صفحه اصلی باید از گالری منتشرشده همین کسب‌وکار باشد.');
+                }
+            }
             if (! $validator->errors()->hasAny(['weekly_hours', 'weekly_hours.*'])) {
                 try {
                     app(BusinessHours::class)->normalize($this->input('weekly_hours'));
