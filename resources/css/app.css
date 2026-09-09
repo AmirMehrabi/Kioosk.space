@@ -104,10 +104,12 @@
 .review-lightbox img { display: block; max-width: 100%; max-height: 80dvh; object-fit: contain; margin: auto; }
 .review-lightbox-close { display: block; min-height: 48px; padding: 12px 20px; margin-inline-start: auto; font: inherit; cursor: pointer; }
 
-.home-hero-shade { background: linear-gradient(to left, rgb(15 20 17 / 88%), rgb(15 20 17 / 55%) 45%, rgb(15 20 17 / 12%) 80%), linear-gradient(to top, rgb(15 20 17 / 90%), transparent 55%); }
+.home-hero-shade { background: rgb(15 20 17 / 48%); }
+.home-hero-shade::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to left, rgb(15 20 17 / 92%), rgb(15 20 17 / 68%) 48%, rgb(15 20 17 / 28%) 82%), linear-gradient(to top, rgb(15 20 17 / 94%), transparent 62%); }
 .home-hero a:focus-visible { outline-color: white; }
 @media (width < 40rem) {
-    .home-hero-shade { background: linear-gradient(to left, rgb(15 20 17 / 76%), rgb(15 20 17 / 40%)), linear-gradient(to top, rgb(15 20 17 / 95%), transparent 70%); }
+    .home-hero-shade { background: rgb(15 20 17 / 58%); }
+    .home-hero-shade::after { background: linear-gradient(to left, rgb(15 20 17 / 88%), rgb(15 20 17 / 58%)), linear-gradient(to top, rgb(15 20 17 / 96%), transparent 68%); }
 }
 .business-hero { background: #303a35; }
 .business-hero-photos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
