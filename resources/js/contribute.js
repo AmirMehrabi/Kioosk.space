@@ -230,9 +230,14 @@ async function startContribution() {
             if (page === 1) el('search-results').replaceChildren();
             if (!result.data.length && page === 1) { const p = document.createElement('p'); p.textContent = 'مکانی پیدا نشد. می‌توانید مکان جدید اضافه کنید.'; el('search-results').append(p); }
             for (const business of result.data) {
-                const button = document.createElement('button'); button.type = 'button'; button.className = 'button-secondary w-full justify-start text-right';
+                const button = document.createElement('button'); button.type = 'button'; button.className = 'contribution-search-result group flex w-full items-center gap-4 rounded-xl border border-border bg-surface p-3 text-right shadow-soft transition hover:-translate-y-0.5 hover:border-pomegranate/50 hover:bg-pomegranate/5 focus-visible:border-pomegranate';
                 if (business.thumbnail) { const img = document.createElement('img'); img.src = business.thumbnail; img.alt = ''; img.className = 'size-16 rounded-lg object-cover'; button.append(img); }
-                const text = document.createElement('span'); text.textContent = `${business.name} — ${business.category} | ${business.city}، ${business.address}`; button.append(text);
+                const text = document.createElement('span'); text.className = 'min-w-0 flex-1';
+                const name = document.createElement('strong'); name.className = 'block text-base font-bold text-ink'; name.textContent = business.name;
+                const meta = document.createElement('span'); meta.className = 'mt-1 block truncate text-sm text-secondary'; meta.textContent = `${business.category} · ${business.city}`;
+                const address = document.createElement('span'); address.className = 'mt-1 block truncate text-xs text-muted'; address.textContent = business.address;
+                text.append(name, meta, address); button.append(text);
+                const arrow = document.createElement('span'); arrow.className = 'shrink-0 text-xl text-muted transition-transform group-hover:-translate-x-1'; arrow.textContent = '←'; button.append(arrow);
                 button.addEventListener('click', async () => {
                     collect(); resetGeography(); state.payload.business_id = business.id; state.payload.name = business.name; state.payload.city = business.city; state.payload.with_review = true;
                     state.payload.featured_photo_ids = [];
@@ -286,6 +291,20 @@ async function startContribution() {
             if (latitude < 24 || latitude > 41 || longitude < 43 || longitude > 64) { el('gps-status').textContent = 'موقعیت خارج از محدوده ایران است؛ شهر را دستی وارد کنید.'; return; }
             Object.assign(state.payload, {latitude, longitude}); el('gps-status').textContent = 'موقعیت دریافت شد؛ نتایج نزدیک‌تر اول نمایش داده می‌شوند.'; changed(); search().catch(fail);
         }, () => { if (geographyRequest !== geographySequence) return; el('gps-status').textContent = 'دسترسی به موقعیت ممکن نشد؛ بدون آن ادامه دهید.'; }, {timeout: 10000, maximumAge: 300000});
+    });
+    const ratingLabels = ['امتیاز بدهید', 'خیلی بد', 'بد', 'متوسط', 'خوب', 'عالی'];
+    form.addEventListener('mouseover', event => {
+        const star = event.target.closest('[data-rating-value]');
+        if (!star) return;
+        const value = Number(star.dataset.ratingValue);
+        form.querySelectorAll('[data-rating-value]').forEach(label => label.dataset.hovered = String(Number(label.dataset.ratingValue) <= value));
+        el('rating-label').textContent = ratingLabels[value];
+    });
+    form.addEventListener('mouseout', event => {
+        const star = event.target.closest('[data-rating-value]');
+        if (!star || star.contains(event.relatedTarget)) return;
+        form.querySelectorAll('[data-rating-value]').forEach(label => label.dataset.hovered = 'false');
+        el('rating-label').textContent = ratingLabels[state.payload.rating || 0];
     });
     async function compress(file) {
         if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) throw new Error('این قالب پشتیبانی نمی‌شود. عکس HEIC را در گالری به JPEG تبدیل و دوباره انتخاب کنید؛ پیش‌نویس محفوظ است.');

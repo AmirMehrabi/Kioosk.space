@@ -141,3 +141,5 @@
 
 .contribution-star[data-selected='true'] { background: var(--color-pomegranate); color: white; }
 .contribution-star:hover { background: var(--color-pomegranate-dark); color: white; }
+.contribution-star[data-hovered='true'] { background: var(--color-pomegranate); color: white; }
+.contribution-search-result:focus-visible { outline: 2px solid var(--color-pomegranate); outline-offset: 3px; }
