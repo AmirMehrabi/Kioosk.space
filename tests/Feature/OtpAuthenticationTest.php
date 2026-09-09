@@ -162,7 +162,7 @@ class OtpAuthenticationTest extends TestCase
         $this->withSession(['otp' => ['public' => $newId], 'otp_binding' => $binding])->post('/verify', ['code' => $sms->messages[1]['code']])->assertRedirect('/account');
     }
 
-    public function test_phone_send_limit_is_shared_across_portals_and_formats(): void
+    public function test_phone_send_limit_is_scoped_to_each_portal(): void
     {
         $this->freezeTime();
         $sms = $this->captureSms();
@@ -170,18 +170,36 @@ class OtpAuthenticationTest extends TestCase
             $this->post('/login', ['mobile' => '09123456789'])->assertRedirect('/verify');
             $this->travel(61)->seconds();
         }
-        $this->post('/business/login', ['mobile' => '+989123456789'])->assertSessionHasErrors('mobile');
-        $this->assertCount(5, $sms->messages);
+        $this->post('/business/login', ['mobile' => '+989123456789'])->assertRedirect('/business/verify');
+        $this->assertCount(6, $sms->messages);
     }
 
-    public function test_ip_rate_limit_blocks_number_rotation_with_a_farsi_response(): void
+    public function test_staff_user_public_login_grants_admin_access_and_remembered_authentication(): void
+    {
+        $sms = $this->captureSms();
+        $user = User::factory()->create([
+            'mobile' => '+989123456789',
+            'mobile_verified_at' => now(),
+            'platform_role' => PlatformRole::Superadmin,
+        ]);
+
+        $this->post('/login', ['mobile' => '09123456789'])->assertRedirect('/verify');
+        $this->post('/verify', ['code' => $sms->messages[0]['code']])->assertRedirect('/account');
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertSame($user->id, session('staff_auth.user_id'));
+        $this->get('/admin/dashboard')->assertOk();
+        $this->assertNotNull($user->fresh()->remember_token);
+    }
+
+    public function test_ip_rate_limit_is_scoped_to_each_portal(): void
     {
         $sms = $this->captureSms();
         for ($send = 0; $send < 5; $send++) {
             $this->post('/login', ['mobile' => '0912345678'.$send])->assertRedirect('/verify');
         }
-        $this->post('/business/login', ['mobile' => '09123456789'])->assertStatus(429)->assertSee('کمی صبر کنید')->assertHeader('Retry-After');
-        $this->assertCount(5, $sms->messages);
+        $this->post('/business/login', ['mobile' => '09123456789'])->assertRedirect('/business/verify');
+        $this->assertCount(6, $sms->messages);
     }
 
     public function test_business_signup_does_not_grant_ownership_or_staff_access(): void
@@ -441,7 +459,7 @@ class OtpAuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
-    public function test_hourly_ip_send_limit_survives_short_window_resets(): void
+    public function test_hourly_ip_send_limit_is_scoped_to_each_portal(): void
     {
         $this->freezeTime();
         $sms = $this->captureSms();
@@ -449,8 +467,8 @@ class OtpAuthenticationTest extends TestCase
             $this->post('/login', ['mobile' => '091234567'.str_pad((string) $send, 2, '0', STR_PAD_LEFT)])->assertRedirect('/verify');
             $this->travel(61)->seconds();
         }
-        $this->post('/business/login', ['mobile' => '09123456888'])->assertSessionHasErrors('mobile');
-        $this->assertCount(20, $sms->messages);
+        $this->post('/business/login', ['mobile' => '09123456888'])->assertRedirect('/business/verify');
+        $this->assertCount(21, $sms->messages);
     }
 
     public function test_request_forgery_is_rejected_for_send_verify_and_logout(): void

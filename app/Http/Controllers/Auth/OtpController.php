@@ -71,10 +71,10 @@ class OtpController extends Controller
         $user = $this->otp->verify($request, $portal, $request->validated('code'));
         $destination = $portal === Portal::Public && $request->session()->get('contribution_destination') === '/contribute' ? '/contribute' : null;
         $request->session()->invalidate();
-        Auth::login($user);
+        Auth::login($user, true);
         $request->session()->regenerate();
         $request->session()->regenerateToken();
-        if ($portal === Portal::Admin) {
+        if ($user->hasStaffAccess()) {
             $request->session()->put('staff_auth', ['user_id' => $user->id, 'verified_at' => now()->timestamp]);
         }
 

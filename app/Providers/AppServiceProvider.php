@@ -29,12 +29,16 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('otp-send', function (Request $request) {
-            return Limit::perMinute(5)->by($request->ip())->response(function (Request $request, array $headers) {
+            $portal = (string) $request->route('portal', 'public');
+
+            return Limit::perMinute((int) config('otp.send_per_minute'))->by($portal.'|'.$request->ip())->response(function (Request $request, array $headers) {
                 return response()->view('errors.429', [], 429, $headers);
             });
         });
         RateLimiter::for('otp-verify', function (Request $request) {
-            return Limit::perMinute(30)->by($request->ip())->response(function (Request $request, array $headers) {
+            $portal = (string) $request->route('portal', 'public');
+
+            return Limit::perMinute((int) config('otp.verify_per_minute'))->by($portal.'|'.$request->ip())->response(function (Request $request, array $headers) {
                 return response()->view('errors.429', [], 429, $headers);
             });
         });

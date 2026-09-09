@@ -39,9 +39,9 @@ class OtpService
             return Cache::lock('otp:phone-lock:'.$key, 10)->block(3, function () use ($request, $portal, $mobile, $key) {
                 return Cache::lock('otp:ip-lock:'.$this->key($request->ip() ?? ''), 10)->block(3, function () use ($request, $portal, $mobile, $key) {
                     $limits = [
-                        ['otp:cooldown:'.$key, 1, config('otp.resend_seconds')],
-                        ['otp:send-phone:'.$key, config('otp.phone_hourly_limit'), 3600],
-                        ['otp:send-ip:'.$this->key($request->ip() ?? ''), config('otp.ip_hourly_limit'), 3600],
+                        ['otp:cooldown:'.$portal->value.':'.$key, 1, config('otp.resend_seconds')],
+                        ['otp:send-phone:'.$portal->value.':'.$key, config('otp.phone_hourly_limit'), 3600],
+                        ['otp:send-ip:'.$portal->value.':'.$this->key($request->ip() ?? ''), config('otp.ip_hourly_limit'), 3600],
                     ];
                     foreach ($limits as [$limit, $maximum, $seconds]) {
                         if (RateLimiter::tooManyAttempts($limit, $maximum)) {
