@@ -1,8 +1,23 @@
 @extends('layouts.community')
 @section('breadcrumbs')
-    <x-breadcrumbs :items="[['label' => $business->name]]" />
+    <x-breadcrumbs :items="array_values(array_filter([
+        $business->category ? ['label' => $business->category->name, 'url' => route('categories.show', $business->category->slug)] : null,
+        $business->location ? ['label' => $business->location->name, 'url' => route('cities.show', $business->location->slug)] : null,
+        ['label' => $business->name],
+    ]))" />
 @endsection
 @section('title', $business->name)
+@section('metaTitle', $business->name.' | امتیاز '.($business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز').' از کاربران کیوسک')
+@section('metaDescription', 'نظرات کاربران درباره '.$business->name.'. مشاهده امتیاز، تصاویر، آدرس و تجربه مشتریان.')
+@section('canonical', route('businesses.show', $business->slug))
+@section('ogType', 'business.business')
+@section('ogTitle', $business->name)
+@section('ogDescription', 'نظرات کاربران درباره '.$business->name.'. مشاهده امتیاز، تصاویر، آدرس و تجربه مشتریان.')
+@if($heroPhotos->first())@section('ogImage', route('media.show', $heroPhotos->first()))@endif
+@push('structured-data')
+<script type="application/ld+json">{!! json_encode($businessSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+<script type="application/ld+json">{!! json_encode($breadcrumbSchema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
+@endpush
 @section('hero')
 <section class="business-hero relative isolate overflow-hidden text-white" data-business-hero data-photo-count="{{ $heroPhotos->count() }}" aria-label="تصاویر اصلی کسب‌وکار">
     <div class="business-hero-photos absolute inset-0 grid" aria-hidden="true">
@@ -18,6 +33,7 @@
         <div class="mt-5 flex flex-wrap items-center gap-3">
             <x-review-stars :rating="$business->reviews_avg_rating ?? 0" />
             <strong class="text-xl">{{ $business->reviews_count ? number_format($business->reviews_avg_rating, 1) : 'بدون امتیاز' }}</strong>
+            @if($business->reviews_count)<span class="text-sm text-white/90">از ۵، بر اساس {{ $business->reviews_count }} نظر</span>@endif
             <a class="pointer-events-auto inline-flex min-h-11 items-center text-sm text-white/90 underline decoration-white/40 underline-offset-4 hover:decoration-white" href="#reviews">{{ $business->reviews_count }} تجربه منتشرشده</a>
             @if($business->price_range)<span class="text-white/50" aria-hidden="true">·</span><span class="text-sm">بازه قیمت: {{ \App\Models\Business::PRICE_RANGES[$business->price_range] }} <bdi dir="ltr">{{ str_repeat('$', $business->price_range) }}</bdi></span>@endif
         </div>
@@ -79,7 +95,7 @@
             <div class="space-y-5">
             @forelse($reviews as $review)
                 <article class="panel" id="review-{{ $review->id }}">
-                    <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-bold">{{ $review->author->name }}</h3><x-review-stars :rating="$review->rating" /></div>
+                    <div class="flex flex-wrap items-center justify-between gap-2"><h3 class="font-bold"><a class="hover:text-pomegranate" href="{{ route('users.show', $review->author->slug) }}">{{ $review->author->name }}</a></h3><x-review-stars :rating="$review->rating" /></div>
                     <p class="mt-2 text-xs text-muted">بازدید {{ \App\Support\PersianDate::format($review->visit_date) }}</p>
                     <p class="my-5 whitespace-pre-wrap leading-8">{{ $review->body }}</p>
                     <div class="flex gap-2">@foreach($review->photos as $photo)<a href="#gallery" data-open-business-gallery aria-label="باز کردن عکس تجربه در گالری"><img data-media-skeleton class="media-skeleton size-20 rounded-lg object-cover" loading="lazy" alt="عکس تجربه" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" width="80" height="80"></a>@endforeach</div>

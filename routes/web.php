@@ -13,12 +13,16 @@ use App\Http\Controllers\BusinessClaimController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessManagementController;
 use App\Http\Controllers\BusinessMediaController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ContributionController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\UserProfileController;
 use App\Http\Middleware\AuthResponseHeaders;
 use App\Http\Middleware\EnsureContributor;
 use App\Http\Middleware\EnsurePortalAccess;
@@ -55,6 +59,15 @@ Route::middleware([AuthResponseHeaders::class, EnsureContributor::class, 'thrott
     Route::post('/reports', [$reviews, 'report'])->name('reports.store');
 });
 Route::get('/reviews/{review}', [ReviewController::class, 'show'])->name('reviews.show');
+Route::get('/place/{slug}', [BusinessController::class, 'show'])->name('businesses.show');
+Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('categories.show');
+Route::get('/city/{slug}', [CityController::class, 'show'])->name('cities.show');
+Route::get('/user/{slug}', [UserProfileController::class, 'show'])->name('users.show');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/places.xml', [SitemapController::class, 'places'])->name('sitemap.places');
+Route::get('/categories.xml', [SitemapController::class, 'categories'])->name('sitemap.categories');
+Route::get('/cities.xml', [SitemapController::class, 'cities'])->name('sitemap.cities');
+Route::get('/users.xml', [SitemapController::class, 'users'])->name('sitemap.users');
 Route::middleware([AuthResponseHeaders::class, EnsurePortalAccess::class.':admin', 'throttle:60,1,moderation'])->prefix('admin')->group(function () {
     $moderation = ModerationController::class;
     Route::get('/submissions', [$moderation, 'index'])->name('admin.submissions');
@@ -78,7 +91,7 @@ Route::middleware([AuthResponseHeaders::class, EnsurePortalAccess::class.':admin
     Route::resource('categories', AdminCategoryController::class)->except('show')->names('admin.categories');
     Route::get('/audit-log', [AdminAuditLogController::class, 'index'])->name('admin.audit-log.index');
 });
-Route::get('/businesses/{slug}', [BusinessController::class, 'show'])->name('businesses.show');
+Route::get('/businesses/{slug}', [BusinessController::class, 'show'])->name('businesses.legacy');
 
 Route::middleware(AuthResponseHeaders::class)->group(function () {
     foreach (Portal::cases() as $portal) {

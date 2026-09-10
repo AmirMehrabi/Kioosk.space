@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#fcfcfb">
-    <title>@yield('title', 'شهر از نگاه شما') | کیوسک</title>
+    <title>@hasSection('metaTitle')@yield('metaTitle')@else @yield('title', 'شهر از نگاه شما') | کیوسک @endif</title>
+    <meta name="description" content="@yield('metaDescription', 'کیوسک؛ راهنمای فارسی کشف کسب‌وکارهای محلی و تجربه‌های واقعی مردم')">
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+    <meta property="og:type" content="@yield('ogType', 'website')">
+    <meta property="og:locale" content="fa_IR">
+    <meta property="og:title" content="@yield('ogTitle', trim($__env->yieldContent('title', 'کیوسک')))">
+    <meta property="og:description" content="@yield('ogDescription', trim($__env->yieldContent('metaDescription', 'کیوسک؛ شهر از نگاه شما')))">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    @hasSection('ogImage')<meta property="og:image" content="@yield('ogImage')">@endif
+    @stack('structured-data')
     <link rel="icon" type="image/png" href="{{ asset('images/logo/red-bookmark.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Models\Review;
 use App\Services\BusinessHours;
 use App\Support\BusinessIdentity;
+use App\Support\SchemaOrg;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -92,7 +93,7 @@ class BusinessController extends Controller
     public function show(Request $request, string $slug, BusinessHours $hours): View|JsonResponse
     {
         $business = Business::where('slug', $slug)->where('status', 'approved')
-            ->with(['featuredPhotos', 'specifications' => fn ($query) => $query->where('is_active', true)->orderBy('position')])
+            ->with(['category', 'location', 'featuredPhotos', 'specifications' => fn ($query) => $query->where('is_active', true)->orderBy('position')])
             ->withCount('reviews')->withAvg('reviews', 'rating')->firstOrFail();
         $request->validate(['rating' => ['nullable', 'integer', 'between:1,5'], 'sort' => ['nullable', 'in:newest,highest,lowest,helpful'], 'photos' => ['nullable', 'integer', 'min:1'], 'photo_category' => ['nullable', Rule::enum(MediaCategory::class)]]);
         $selectedPhotoCategory = $request->enum('photo_category', MediaCategory::class);
@@ -116,7 +117,7 @@ class BusinessController extends Controller
         if ($heroPhotos->count() < 4) {
             $heroPhotos = $heroPhotos->concat($business->photos()->whereNotIn('media.id', $heroPhotos->pluck('id'))->latest()->orderBy('id')->limit(4 - $heroPhotos->count())->get());
         }
-        $query = $business->reviews()->with(['author:id,name', 'photos' => fn ($q) => $q->published()])
+        $query = $business->reviews()->with(['author:id,name,slug', 'photos' => fn ($q) => $q->published()])
             ->addSelect(['helpful_count' => DB::table('helpful_votes')->selectRaw('count(*)')->whereColumn('review_id', 'reviews.id')]);
         $query->when($request->integer('rating'), fn ($q, $rating) => $q->where('rating', $rating));
         match ($request->input('sort')) {
@@ -129,13 +130,19 @@ class BusinessController extends Controller
             'photos' => $photos, 'heroPhotos' => $heroPhotos,
             'photoCategories' => MediaCategory::cases(), 'photoCounts' => $photoCounts,
             'selectedPhotoCategory' => $selectedPhotoCategory,
-            'category' => DB::table('categories')->where('id', $business->category_id)->value('name'),
+            'category' => $business->category?->name,
             'myReview' => $request->user() ? Review::withTrashed()->where('business_id', $business->id)->where('user_id', $request->user()->id)->first() : null,
             'saved' => DB::table('saved_businesses')->where('user_id', $request->user()?->id)->where('business_id', $business->id)->exists(),
             'votes' => DB::table('helpful_votes')->where('user_id', $request->user()?->id)->whereIn('review_id', $reviews->pluck('id'))->pluck('review_id')->all(),
             'ownerReplies' => DB::table('owner_replies')->where('status', 'published')->whereIn('review_id', $reviews->pluck('id'))->get()->keyBy('review_id'),
             'isOwner' => $request->user() && $business->owners()->whereKey($request->user()->id)->exists(),
             'hoursStatus' => $hours->status($business->weekly_hours),
+            'businessSchema' => SchemaOrg::business($business, $reviews->getCollection(), $heroPhotos),
+            'breadcrumbSchema' => SchemaOrg::breadcrumbs(array_values(array_filter([
+                $business->category ? ['name' => $business->category->name, 'url' => route('categories.show', $business->category->slug)] : null,
+                $business->location ? ['name' => $business->location->name, 'url' => route('cities.show', $business->location->slug)] : null,
+                ['name' => $business->name, 'url' => route('businesses.show', $business->slug)],
+            ]))),
         ]);
     }
 

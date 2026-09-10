@@ -16,6 +16,15 @@ class Business extends Model
 
     protected $guarded = ['id'];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Business $business): void {
+            if ($business->isDirty('normalized_city') || ! $business->city_id) {
+                $business->city_id = City::where('normalized_name', $business->normalized_city)->value('id');
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return ['is_featured' => 'boolean', 'phones' => 'array', 'websites' => 'array', 'weekly_hours' => 'array', 'price_range' => 'integer', 'latitude' => 'float', 'longitude' => 'float'];
@@ -29,6 +38,16 @@ class Business extends Model
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class)->published();
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(City::class, 'city_id');
     }
 
     public function photos(): HasMany

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Enums\PlatformRole;
+use App\Support\EntitySlug;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -20,6 +21,11 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
+
+    protected static function booted(): void
+    {
+        static::creating(fn (User $user) => EntitySlug::set($user));
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -55,5 +61,10 @@ class User extends Authenticatable
     public function businessClaims(): HasMany
     {
         return $this->hasMany(BusinessClaim::class);
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
     }
 }
