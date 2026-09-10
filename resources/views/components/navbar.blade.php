@@ -40,12 +40,8 @@
                 <x-icon name="user" />
             </a>
         @else
-            <a href="{{ route('login') }}" aria-label="ورود" title="ورود" @class(['mobile-nav-item flex-col gap-1', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
-                <x-icon name="phone" />
-                <span class="text-xs font-semibold">ورود</span>
-            </a>
-            <a href="{{ route('contact') }}" aria-label="تماس با ما" title="تماس با ما" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('contact')]) @if(request()->routeIs('contact')) aria-current="page" @endif>
-                <x-icon name="message" />
+            <a href="{{ route('login') }}" aria-label="ورود" title="ورود" data-mobile-login @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
+                <x-icon name="crown" />
             </a>
         @endauth
     </div>

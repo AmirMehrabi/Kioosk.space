@@ -22,11 +22,14 @@ class NavigationTest extends TestCase
             ->assertSee('value="cafe"', false);
     }
 
-    public function test_unauthenticated_navigation_shows_a_visible_login_option(): void
+    public function test_unauthenticated_navigation_ends_with_an_icon_only_mobile_login_option(): void
     {
-        $this->get('/')->assertSee(route('login'), false)
+        $this->get('/')->assertOk()
             ->assertSee('>ورود</a>', false)
-            ->assertSee('>ورود</span>', false);
+            ->assertSee('data-mobile-login', false)
+            ->assertSee('aria-label="ورود"', false)
+            ->assertDontSee('>ورود</span>', false)
+            ->assertDontSee('aria-label="تماس با ما"', false);
     }
 
     public function test_admin_preview_has_a_breadcrumb_back_to_the_submission_queue(): void
