@@ -63,7 +63,7 @@ class BusinessClaimController extends Controller
     public function proof(Request $request, BusinessClaim $claim, BusinessClaimProof $proof): StreamedResponse
     {
         abort_unless($proof->business_claim_id === $claim->id, 404);
-        $staff = $request->user()->hasStaffAccess() && $request->session()->get('staff_auth.user_id') === $request->user()->id && $request->session()->get('staff_auth.verified_at', 0) > now()->timestamp - config('otp.staff_session_seconds');
+        $staff = $request->user()->hasStaffAccess();
         abort_unless($claim->user_id === $request->user()->id || $staff, 404);
 
         return Storage::disk('local')->response($request->boolean('thumbnail') ? $proof->thumbnail_path : $proof->path, 'proof.jpg', ['Content-Type' => 'image/jpeg', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);

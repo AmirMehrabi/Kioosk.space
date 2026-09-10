@@ -74,9 +74,6 @@ class OtpController extends Controller
         Auth::login($user, true);
         $request->session()->regenerate();
         $request->session()->regenerateToken();
-        if ($user->hasStaffAccess()) {
-            $request->session()->put('staff_auth', ['user_id' => $user->id, 'verified_at' => now()->timestamp]);
-        }
 
         if ($request->expectsJson()) {
             return response()->json(['user_id' => $user->id, 'needs_display_name' => (bool) preg_match('/^(کاربر|User)(\s|$)/u', $user->name), 'csrf_token' => $request->session()->token(), 'redirect' => $destination ?? route($portal->destination())]);

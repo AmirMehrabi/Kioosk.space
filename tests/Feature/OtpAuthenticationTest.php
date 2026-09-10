@@ -174,7 +174,7 @@ class OtpAuthenticationTest extends TestCase
         $this->assertCount(6, $sms->messages);
     }
 
-    public function test_staff_user_public_login_grants_admin_access_and_remembered_authentication(): void
+    public function test_staff_user_login_grants_remembered_admin_access(): void
     {
         $sms = $this->captureSms();
         $user = User::factory()->create([
@@ -187,7 +187,6 @@ class OtpAuthenticationTest extends TestCase
         $this->post('/verify', ['code' => $sms->messages[0]['code']])->assertRedirect('/account');
 
         $this->assertAuthenticatedAs($user);
-        $this->assertSame($user->id, session('staff_auth.user_id'));
         $this->get('/admin/dashboard')->assertOk();
         $this->assertNotNull($user->fresh()->remember_token);
     }
@@ -231,17 +230,13 @@ class OtpAuthenticationTest extends TestCase
     }
 
     #[DataProvider('staffRoles')]
-    public function test_staff_need_recent_portal_specific_authentication_and_current_permission(PlatformRole $role): void
+    public function test_staff_login_persists_until_their_permission_is_revoked(PlatformRole $role): void
     {
         $this->freezeTime();
-        $sms = $this->captureSms();
         $user = User::factory()->create(['mobile' => '+989123456789', 'mobile_verified_at' => now(), 'platform_role' => $role]);
-        $this->actingAs($user)->get('/admin/dashboard')->assertRedirect('/admin/login');
-        $this->post('/admin/login', ['mobile' => '09123456789'])->assertRedirect('/admin/verify');
-        $this->post('/admin/verify', ['code' => $sms->messages[0]['code']])->assertRedirect('/admin/dashboard');
-        $this->get('/admin/dashboard')->assertOk();
+        $this->actingAs($user)->get('/admin/dashboard')->assertOk();
         $this->travel(1800)->seconds();
-        $this->get('/admin/dashboard')->assertRedirect('/admin/login');
+        $this->get('/admin/dashboard')->assertOk();
         $user->platform_role = PlatformRole::User;
         $user->save();
         $this->actingAs($user)->get('/admin/dashboard')->assertForbidden();

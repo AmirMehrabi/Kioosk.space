@@ -47,7 +47,7 @@ class MediaController extends Controller
     {
         $public = Media::published()->whereKey($media->id)->exists();
         $user = $request->user();
-        $private = $user && ! $user->suspended_at && ($media->user_id === $user->id || ($user->hasStaffAccess() && $request->session()->get('staff_auth.user_id') === $user->id && $request->session()->get('staff_auth.verified_at', 0) > now()->timestamp - config('otp.staff_session_seconds')));
+        $private = $user && ! $user->suspended_at && ($media->user_id === $user->id || $user->hasStaffAccess());
         abort_unless($public || $private, 404);
 
         return Storage::disk('local')->response($request->boolean('thumbnail') ? $media->thumbnail_path : $media->path, 'photo.jpg', ['Content-Type' => 'image/jpeg', 'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-store']);

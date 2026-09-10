@@ -9,6 +9,5 @@ return [
     'send_per_minute' => (int) env('OTP_SEND_PER_MINUTE', 5),
     'verify_per_minute' => (int) env('OTP_VERIFY_PER_MINUTE', 30),
     'failed_verification_limit' => 10,
-    'staff_session_seconds' => (int) env('OTP_STAFF_SESSION_SECONDS', 1800),
     'log_failed_code' => env('OTP_LOG_FAILED_CODE', false),
 ];

@@ -371,7 +371,7 @@ class ContributionTest extends TestCase
         Notification::assertSentTo($author, SubmissionUpdated::class);
     }
 
-    public function test_report_queue_shows_content_and_requires_recent_staff_authentication(): void
+    public function test_report_queue_shows_content_to_authenticated_staff(): void
     {
         $business = Business::factory()->create();
         $draft = $this->draft($this->contributor(), ['business_id' => $business->id]);
@@ -380,7 +380,7 @@ class ContributionTest extends TestCase
         $this->get('/admin/reports')->assertForbidden();
         $this->staff();
         $this->get('/admin/reports')->assertOk()->assertSee('محیط آرام و برخورد بسیار خوبی داشتند.');
-        $this->withSession(['staff_auth.verified_at' => now()->subHour()->timestamp])->get('/admin/reports')->assertRedirect();
+        $this->withSession(['staff_auth.verified_at' => now()->subHour()->timestamp])->get('/admin/reports')->assertOk();
     }
 
     public function test_review_validation_is_farsi_and_invalid_date_rolls_back_submission(): void

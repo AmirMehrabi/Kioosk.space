@@ -107,7 +107,7 @@ class ContributionController extends Controller
     public function submit(Request $request, ContributionDraft $draft, SubmitContribution $submit): JsonResponse
     {
         $this->authorizeDraft($request, $draft);
-        $staff = $request->user()->hasStaffAccess() && $request->session()->get('staff_auth.user_id') === $request->user()->id && $request->session()->get('staff_auth.verified_at', 0) > now()->timestamp - config('otp.staff_session_seconds');
+        $staff = $request->user()->hasStaffAccess();
 
         return response()->json($submit->handle($draft, $request->user(), $staff));
     }

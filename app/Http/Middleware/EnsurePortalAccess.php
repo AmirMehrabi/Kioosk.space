@@ -26,9 +26,6 @@ class EnsurePortalAccess
         }
         if ($portal === Portal::Admin) {
             abort_unless($user->hasStaffAccess(), 403);
-            if ($request->session()->get('staff_auth.user_id') !== $user->id || $request->session()->get('staff_auth.verified_at', 0) <= now()->timestamp - config('otp.staff_session_seconds')) {
-                return redirect()->route('admin.login')->with('status', 'برای ورود به بخش مدیریت، شماره خود را دوباره تأیید کنید.');
-            }
         }
 
         return $next($request);
