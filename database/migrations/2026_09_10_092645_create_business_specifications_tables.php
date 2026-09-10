@@ -25,7 +25,9 @@ return new class extends Migration
 
         Schema::create('business_business_specification', function (Blueprint $table) {
             $table->foreignId('business_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('business_specification_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('business_specification_id')
+                ->constrained(indexName: 'business_specification_pivot_specification_fk')
+                ->cascadeOnDelete();
             $table->timestamps();
             $table->primary(['business_id', 'business_specification_id']);
         });
