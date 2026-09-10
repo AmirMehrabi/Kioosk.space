@@ -9,6 +9,8 @@ class ModerationHistory extends Model
 {
     public const UPDATED_AT = null;
 
+    protected $table = 'moderation_history';
+
     protected $guarded = ['id'];
 
     protected function casts(): array

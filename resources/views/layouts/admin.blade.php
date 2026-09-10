@@ -13,8 +13,10 @@
             $breadcrumbs[] = ['label' => 'درخواست‌های مالکیت'];
         } elseif (request()->routeIs('admin.users*')) {
             $breadcrumbs[] = ['label' => 'کاربران و همکاران'];
-        } elseif (request()->routeIs('admin.taxonomy*')) {
-            $breadcrumbs[] = ['label' => 'شهرها و دسته‌بندی‌ها'];
+        } elseif (request()->routeIs('admin.cities*')) {
+            $breadcrumbs[] = ['label' => 'شهرها', 'url' => route('admin.cities.index')];
+        } elseif (request()->routeIs('admin.categories*')) {
+            $breadcrumbs[] = ['label' => 'دسته‌بندی‌ها', 'url' => route('admin.categories.index')];
         } elseif (request()->routeIs('admin.audit-log*')) {
             $breadcrumbs[] = ['label' => 'تاریخچه فعالیت‌ها'];
         }
@@ -38,7 +40,7 @@
                     @endforeach
                     @if(auth()->user()->platform_role === \App\Enums\PlatformRole::Superadmin)
                         <div class="my-3 hidden border-t border-border lg:block"></div>
-                        @foreach(['admin.users.index' => 'کاربران و همکاران', 'admin.taxonomy.index' => 'شهرها و دسته‌بندی‌ها', 'admin.audit-log.index' => 'تاریخچه فعالیت‌ها'] as $destination => $label)
+                        @foreach(['admin.users.index' => 'کاربران و همکاران', 'admin.cities.index' => 'شهرها', 'admin.categories.index' => 'دسته‌بندی‌ها', 'admin.audit-log.index' => 'تاریخچه فعالیت‌ها'] as $destination => $label)
                             <a @class(['admin-nav-item shrink-0', 'admin-nav-item-active' => request()->routeIs($destination, str_replace('.index', '.*', $destination))]) href="{{ route($destination) }}" @if(request()->routeIs($destination, str_replace('.index', '.*', $destination))) aria-current="page" @endif>{{ $label }}</a>
                         @endforeach
                     @endif
