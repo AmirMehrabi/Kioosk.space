@@ -41,6 +41,11 @@ class Business extends Model
         return $this->belongsToMany(Media::class, 'business_featured_media', 'business_id', 'media_id')->where('media.status', 'published')->withPivot('position')->orderByPivot('position');
     }
 
+    public function specifications(): BelongsToMany
+    {
+        return $this->belongsToMany(BusinessSpecification::class)->withTimestamps();
+    }
+
     public function claims(): HasMany
     {
         return $this->hasMany(BusinessClaim::class);

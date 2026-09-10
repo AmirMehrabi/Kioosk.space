@@ -66,6 +66,7 @@ Route::middleware([AuthResponseHeaders::class, EnsurePortalAccess::class.':admin
     Route::get('/businesses/{business}/edit', [AdminBusinessController::class, 'edit'])->name('admin.businesses.edit');
     Route::put('/businesses/{business}', [AdminBusinessController::class, 'update'])->name('admin.businesses.update');
     Route::post('/businesses/{business}/photos', [BusinessMediaController::class, 'store'])->middleware('throttle:20,1,business-photos')->name('admin.businesses.photos.store');
+    Route::patch('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'update'])->name('admin.businesses.photos.update');
     Route::delete('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'destroy'])->name('admin.businesses.photos.destroy');
     Route::get('/ownership-claims', [AdminBusinessClaimController::class, 'index'])->name('admin.claims.index');
     Route::post('/ownership-claims/{claim}', [AdminBusinessClaimController::class, 'update'])->name('admin.claims.update');
@@ -100,6 +101,7 @@ Route::middleware(AuthResponseHeaders::class)->group(function () {
         Route::get('/businesses/{business}/edit', [BusinessManagementController::class, 'edit'])->name('business.businesses.edit');
         Route::put('/businesses/{business}', [BusinessManagementController::class, 'update'])->name('business.businesses.update');
         Route::post('/businesses/{business}/photos', [BusinessMediaController::class, 'store'])->middleware('throttle:20,1,business-photos')->name('business.businesses.photos.store');
+        Route::patch('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'update'])->name('business.businesses.photos.update');
         Route::delete('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'destroy'])->name('business.businesses.photos.destroy');
         Route::get('/claims', [BusinessClaimController::class, 'index'])->name('business.claims.index');
         Route::get('/claims/new', [BusinessClaimController::class, 'create'])->name('business.claims.create');

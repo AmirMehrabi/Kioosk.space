@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaCategory;
 use App\Models\Business;
 use App\Models\Category;
 use App\Models\City;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BusinessController extends Controller
@@ -89,9 +91,16 @@ class BusinessController extends Controller
 
     public function show(Request $request, string $slug, BusinessHours $hours): View|JsonResponse
     {
-        $business = Business::where('slug', $slug)->where('status', 'approved')->with('featuredPhotos')->withCount('reviews')->withAvg('reviews', 'rating')->firstOrFail();
-        $request->validate(['rating' => ['nullable', 'integer', 'between:1,5'], 'sort' => ['nullable', 'in:newest,highest,lowest,helpful'], 'photos' => ['nullable', 'integer', 'min:1']]);
-        $photos = $business->photos()->latest()->orderBy('id')->paginate(12, ['*'], 'photos')->withQueryString();
+        $business = Business::where('slug', $slug)->where('status', 'approved')
+            ->with(['featuredPhotos', 'specifications' => fn ($query) => $query->where('is_active', true)->orderBy('position')])
+            ->withCount('reviews')->withAvg('reviews', 'rating')->firstOrFail();
+        $request->validate(['rating' => ['nullable', 'integer', 'between:1,5'], 'sort' => ['nullable', 'in:newest,highest,lowest,helpful'], 'photos' => ['nullable', 'integer', 'min:1'], 'photo_category' => ['nullable', Rule::enum(MediaCategory::class)]]);
+        $selectedPhotoCategory = $request->enum('photo_category', MediaCategory::class);
+        $photos = $business->photos()
+            ->when($selectedPhotoCategory === MediaCategory::Other, fn ($query) => $query->where(fn ($query) => $query->where('category', MediaCategory::Other->value)->orWhereNull('category')))
+            ->when($selectedPhotoCategory && $selectedPhotoCategory !== MediaCategory::Other, fn ($query) => $query->where('category', $selectedPhotoCategory->value))
+            ->latest()->orderBy('id')->paginate(12, ['*'], 'photos')->withQueryString();
+        $photoCounts = $business->photos()->selectRaw("COALESCE(category, 'other') as photo_category, count(*) as aggregate")->groupBy('photo_category')->pluck('aggregate', 'photo_category');
         if ($request->expectsJson()) {
             return response()->json([
                 'photos' => $photos->map(fn ($photo) => [
@@ -99,6 +108,8 @@ class BusinessController extends Controller
                     'thumbnail' => route('media.show', [$photo, 'thumbnail' => 1]), 'alt' => 'عکس '.$business->name,
                 ])->values(),
                 'next' => $photos->nextPageUrl(), 'total' => $photos->total(),
+                'category' => $selectedPhotoCategory?->value,
+                'counts' => ['all' => $photoCounts->sum()] + $photoCounts->all(),
             ]);
         }
         $heroPhotos = $business->featuredPhotos->take(4);
@@ -116,6 +127,8 @@ class BusinessController extends Controller
         return view('businesses.show', [
             'business' => $business, 'reviews' => $reviews,
             'photos' => $photos, 'heroPhotos' => $heroPhotos,
+            'photoCategories' => MediaCategory::cases(), 'photoCounts' => $photoCounts,
+            'selectedPhotoCategory' => $selectedPhotoCategory,
             'category' => DB::table('categories')->where('id', $business->category_id)->value('name'),
             'myReview' => $request->user() ? Review::withTrashed()->where('business_id', $business->id)->where('user_id', $request->user()->id)->first() : null,
             'saved' => DB::table('saved_businesses')->where('user_id', $request->user()?->id)->where('business_id', $business->id)->exists(),

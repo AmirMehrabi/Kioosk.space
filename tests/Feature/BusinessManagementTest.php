@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\PlatformRole;
 use App\Models\Business;
+use App\Models\BusinessSpecification;
 use App\Models\Media;
 use App\Models\User;
 use App\Services\BusinessHours;
@@ -81,12 +82,56 @@ class BusinessManagementTest extends TestCase
 
         $photoId = $this->actingAs($owner)->postJson(route('business.businesses.photos.store', $business), [
             'photo' => UploadedFile::fake()->image('shop.png', 500, 400),
+            'category' => 'exterior',
         ])->assertCreated()->json('id');
         $photo = Media::findOrFail($photoId);
+        $this->assertSame('exterior', $photo->category->value);
         Storage::disk('local')->assertExists($photo->path);
         $this->deleteJson(route('business.businesses.photos.destroy', [$business, $photo]))->assertOk();
         Storage::disk('local')->assertMissing($photo->path);
         $this->assertSame('removed', $photo->fresh()->status);
+    }
+
+    public function test_owner_can_select_true_specifications_and_clear_them(): void
+    {
+        $owner = $this->verifiedUser();
+        $business = Business::factory()->create();
+        $business->owners()->attach($owner, ['role' => 'owner', 'approved_at' => now()]);
+        $petFriendly = BusinessSpecification::where('key', 'pet_friendly')->firstOrFail();
+        $wifi = BusinessSpecification::where('key', 'free_wifi')->firstOrFail();
+        $profile = $business->only(['name', 'category_id', 'city', 'address']);
+
+        $this->actingAs($owner)->put(route('business.businesses.update', $business), $profile + [
+            'specifications_present' => 1,
+            'specification_ids' => [$petFriendly->id, $wifi->id],
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('business_business_specification', ['business_id' => $business->id, 'business_specification_id' => $petFriendly->id]);
+        $this->assertDatabaseHas('business_business_specification', ['business_id' => $business->id, 'business_specification_id' => $wifi->id]);
+
+        $this->actingAs($owner)->put(route('business.businesses.update', $business), $profile + ['specifications_present' => 1])
+            ->assertRedirect()->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('business_business_specification', ['business_id' => $business->id]);
+    }
+
+    public function test_owner_can_categorize_only_photos_from_their_business(): void
+    {
+        $owner = $this->verifiedUser();
+        $business = Business::factory()->create();
+        $business->owners()->attach($owner, ['role' => 'owner', 'approved_at' => now()]);
+        $photo = $this->photo($owner, $business);
+        $otherPhoto = $this->photo($owner, Business::factory()->create());
+
+        $this->actingAs($owner)->patchJson(route('business.businesses.photos.update', [$business, $photo]), ['category' => 'interior'])
+            ->assertOk()->assertJson(['updated' => true, 'category' => 'interior']);
+
+        $this->assertDatabaseHas('media', ['id' => $photo->id, 'category' => 'interior']);
+
+        $this->patchJson(route('business.businesses.photos.update', [$business, $otherPhoto]), ['category' => 'exterior'])
+            ->assertNotFound();
+        $this->patchJson(route('business.businesses.photos.update', [$business, $photo]), ['category' => 'invalid'])
+            ->assertUnprocessable()->assertJsonValidationErrors('category');
     }
 
     public function test_recent_admin_can_manage_any_approved_business(): void
@@ -161,5 +206,14 @@ class BusinessManagementTest extends TestCase
         $schedule['saturday'] = ['closed' => false, 'shifts' => [['opens' => '09:00', 'closes' => '13:00', 'next_day' => false], ['opens' => '16:00', 'closes' => '22:00', 'next_day' => false]]];
 
         return $schedule;
+    }
+
+    private function photo(User $user, Business $business): Media
+    {
+        return Media::create([
+            'id' => (string) Str::uuid(), 'user_id' => $user->id, 'client_id' => (string) Str::uuid(),
+            'business_id' => $business->id, 'path' => 'full.jpg', 'thumbnail_path' => 'thumb.jpg',
+            'status' => 'published', 'source' => 'management',
+        ]);
     }
 }

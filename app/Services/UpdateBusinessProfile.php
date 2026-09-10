@@ -40,6 +40,9 @@ class UpdateBusinessProfile
                 $featured[$mediaId] = ['position' => $position + 1];
             }
             $business->featuredPhotos()->sync($featured);
+            if ($data['specifications_present'] ?? false) {
+                $business->specifications()->sync($data['specification_ids'] ?? []);
+            }
             DB::table('moderation_history')->insert(['actor_id' => $actor->id, 'content_type' => 'business', 'content_id' => (string) $business->id, 'action' => 'profile_update', 'reason' => 'ویرایش مستقیم نمایه کسب‌وکار', 'snapshot' => json_encode($snapshot), 'created_at' => now()]);
         });
     }

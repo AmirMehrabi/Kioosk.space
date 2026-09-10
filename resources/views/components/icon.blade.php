@@ -39,5 +39,15 @@
         @case('store') <path d="M3 10V7l2-4h14l2 4v3a3 3 0 0 1-6 0 3 3 0 0 1-6 0 3 3 0 0 1-6 0ZM4 13v8h16v-8M9 21v-6h6v6"/> @break
         @case('info') <circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/> @break
         @case('plus') <path d="M12 5v14M5 12h14"/> @break
+        @case('paw') <circle cx="7" cy="8" r="2"/><circle cx="17" cy="8" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="20" cy="13" r="2"/><path d="M8 19c0-3 1.8-6 4-6s4 3 4 6c0 2-1.8 3-4 1.5C9.8 22 8 21 8 19Z"/> @break
+        @case('smoking') <path d="M3 15h14v4H3Zm14 0h2v4h-2Zm2 0c2 0 2-3 0-3m-5 0c2-1 2-3 0-4s-2-3 0-4"/> @break
+        @case('chair') <path d="M6 12V6a3 3 0 0 1 6 0v6m-8 0h14a2 2 0 0 1 2 2v3H4v-5Zm2 5v4m12-4v4"/> @break
+        @case('parking') <path d="M6 21V3h7a5 5 0 0 1 0 10H6m0-5h7"/> @break
+        @case('accessibility') <circle cx="12" cy="4" r="2"/><path d="M7 8h10m-5 0v5m0 0-4 8m4-8 5 8"/> @break
+        @case('calendar') <rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-13 4h2m4 0h2m-8 3h2"/> @break
+        @case('bag') <path d="M5 8h14l-1 13H6L5 8Zm4 0V6a3 3 0 0 1 6 0v2"/> @break
+        @case('delivery') <path d="M3 6h11v11H3Zm11 4h4l3 4v3h-7Zm-8 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm11 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/> @break
+        @case('restroom') <circle cx="7" cy="4" r="2"/><path d="M7 7v7m-3-4h6m-5 11 2-7 2 7M17 2v19m-3-11h6"/> @break
+        @case('music') <path d="M9 18V5l10-2v13M9 9l10-2M6 21a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm10-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/> @break
     @endswitch
 </svg>

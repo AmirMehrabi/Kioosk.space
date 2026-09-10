@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MediaCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,11 @@ class Media extends Model
     protected $guarded = [];
 
     protected $hidden = ['path', 'thumbnail_path'];
+
+    protected function casts(): array
+    {
+        return ['category' => MediaCategory::class];
+    }
 
     public function featuredByBusinesses(): BelongsToMany
     {

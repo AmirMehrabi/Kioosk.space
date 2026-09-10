@@ -55,6 +55,17 @@ if (manager) {
         const day = checkbox.closest('[data-day]'); day.querySelector('[data-shifts]').classList.toggle('opacity-40', checkbox.checked); if (!checkbox.checked && !day.querySelector('[data-shift]')) addWorkingShift(day);
     }));
 
+    document.querySelectorAll('[data-photo-category]').forEach(select => select.addEventListener('change', async () => {
+        select.disabled = true;
+        const response = await fetch(`${manager.dataset.photoBase}/${select.dataset.photoCategory}`, {
+            method: 'PATCH',
+            headers: {Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf()},
+            body: JSON.stringify({category: select.value || null}),
+        });
+        select.disabled = false;
+        if (!response.ok) alert('دسته‌بندی تصویر ذخیره نشد.');
+    }));
+
     async function deleteManagementPhoto(button) {
         if (!confirm('این تصویر مدیریتی حذف شود؟')) return;
         const response = await fetch(`${manager.dataset.deleteBase}/${button.dataset.deletePhoto}`, {method:'DELETE', headers:{Accept:'application/json','X-CSRF-TOKEN':csrf()}});
@@ -63,7 +74,7 @@ if (manager) {
     document.getElementById('management-photo')?.addEventListener('change', async event => {
         const file = event.target.files[0]; if (!file) return;
         const status = document.getElementById('management-photo-status'); status.textContent = 'در حال بارگذاری…';
-        const data = new FormData(); data.append('photo', file);
+        const data = new FormData(); data.append('photo', file); data.append('category', document.getElementById('management-photo-category').value);
         const response = await fetch(manager.dataset.uploadUrl, {method:'POST', body:data, headers:{Accept:'application/json','X-CSRF-TOKEN':csrf()}});
         status.textContent = response.ok ? 'تصویر بارگذاری شد.' : 'بارگذاری انجام نشد؛ نوع و اندازه فایل را بررسی کنید.';
         if (response.ok) location.reload();

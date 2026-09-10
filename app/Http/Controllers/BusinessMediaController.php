@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MediaCategory;
 use App\Models\Business;
 use App\Models\Media;
 use App\Services\ImageStorage;
@@ -9,16 +10,20 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BusinessMediaController extends Controller
 {
     public function store(Request $request, Business $business, ImageStorage $images): JsonResponse
     {
         $this->authorizeBusiness($request, $business);
-        $request->validate(['photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240', 'dimensions:min_width=100,min_height=100,max_width=8000,max_height=8000']]);
+        $request->validate([
+            'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png,webp', 'max:10240', 'dimensions:min_width=100,min_height=100,max_width=8000,max_height=8000'],
+            'category' => ['nullable', Rule::enum(MediaCategory::class)],
+        ]);
         abort_if($business->photos()->where('source', 'management')->where('status', 'published')->count() >= 50, 422, 'حداکثر پنجاه تصویر مدیریتی برای هر کسب‌وکار مجاز است.');
         $stored = $images->store($request->file('photo'), 'businesses/'.$business->id);
-        $photo = Media::create($stored + ['user_id' => $request->user()->id, 'client_id' => (string) Str::uuid(), 'business_id' => $business->id, 'status' => 'published', 'source' => 'management']);
+        $photo = Media::create($stored + ['user_id' => $request->user()->id, 'client_id' => (string) Str::uuid(), 'business_id' => $business->id, 'status' => 'published', 'source' => 'management', 'category' => $request->input('category')]);
 
         return response()->json(['id' => $photo->id, 'thumbnail' => route('media.show', [$photo, 'thumbnail' => 1])], 201);
     }
@@ -32,6 +37,16 @@ class BusinessMediaController extends Controller
         Storage::disk('local')->delete([$media->path, $media->thumbnail_path]);
 
         return response()->json(['removed' => true]);
+    }
+
+    public function update(Request $request, Business $business, Media $media): JsonResponse
+    {
+        $this->authorizeBusiness($request, $business);
+        abort_unless($media->business_id === $business->id && $media->status === 'published', 404);
+        $validated = $request->validate(['category' => ['nullable', Rule::enum(MediaCategory::class)]]);
+        $media->update($validated);
+
+        return response()->json(['updated' => true, 'category' => $media->category?->value]);
     }
 
     private function authorizeBusiness(Request $request, Business $business): void

@@ -40,12 +40,34 @@
             <form method="post" action="{{ route('businesses.save', $business) }}">@csrf @if($saved)@method('delete')@endif<button class="button-secondary">{{ $saved ? 'حذف از ذخیره‌شده‌ها' : 'ذخیره مکان' }}</button></form>
             @unless($isOwner)<a class="button-secondary" href="{{ route('business.claims.create',['business'=>$business->id]) }}">درخواست مالکیت</a>@endunless
         </div>
+        @if($business->specifications->isNotEmpty())
+            <section class="mt-9" aria-labelledby="specifications-title">
+                <h2 id="specifications-title" class="text-2xl font-bold">امکانات و ویژگی‌ها</h2>
+                <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    @foreach($business->specifications as $specification)
+                        <div class="flex min-h-28 flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-surface p-4 text-center">
+                            <span class="flex size-14 items-center justify-center rounded-2xl bg-pomegranate/10 text-pomegranate"><x-icon :name="$specification->icon" class="size-8" /></span>
+                            <span class="text-sm font-bold leading-6">{{ $specification->label }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
         <section class="mt-9 scroll-mt-6" id="gallery" aria-labelledby="gallery-title">
             <h2 id="gallery-title" class="mb-4 text-xl font-bold">گالری تصاویر</h2>
+            <nav class="mb-4 flex gap-2 overflow-x-auto pb-2" aria-label="دسته‌بندی تصاویر">
+                <a href="{{ route('businesses.show', $business->slug) }}#gallery" class="gallery-category @if(!$selectedPhotoCategory) gallery-category-active @endif">همه تصاویر <span>{{ $photoCounts->sum() }}</span></a>
+                @foreach($photoCategories as $photoCategory)
+                    @php($categoryCount = (int) ($photoCounts[$photoCategory->value] ?? 0))
+                    @if($categoryCount > 0)
+                        <a href="{{ route('businesses.show', [$business->slug, 'photo_category' => $photoCategory->value]) }}#gallery" class="gallery-category @if($selectedPhotoCategory === $photoCategory) gallery-category-active @endif">{{ $photoCategory->label() }} <span>{{ $categoryCount }}</span></a>
+                    @endif
+                @endforeach
+            </nav>
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 @forelse($photos as $photo)<div><a href="#gallery" data-open-business-gallery aria-label="باز کردن عکس {{ $loop->iteration }} در گالری"><img data-media-skeleton class="media-skeleton h-48 w-full rounded-xl object-cover sm:h-64" src="{{ route('media.show', [$photo, 'thumbnail' => 1]) }}" alt="عکس {{ $business->name }}" loading="lazy" width="600" height="400"></a>@if(auth()->id() === $photo->user_id)<form method="post" action="{{ route('media.destroy', $photo) }}">@csrf @method('delete')<button class="button-secondary mt-1">حذف عکس من</button></form>@endif
                 @include('contributions.report-form', ['type' => 'media', 'contentId' => $photo->id])</div>
-                @empty<p class="text-sm text-muted">هنوز عکسی ثبت نشده است.</p>@endforelse
+                @empty<p class="text-sm text-muted">در این دسته هنوز عکسی ثبت نشده است.</p>@endforelse
             </div><div class="mt-4">{{ $photos->withQueryString()->links() }}</div>
         </section>
         <section class="mt-10" id="reviews">
@@ -76,7 +98,7 @@
     </div>
     <aside><section class="panel lg:sticky lg:top-5"><h2 class="mb-5 text-xl font-bold">آدرس و اطلاعات تماس</h2><p class="leading-8">{{ $business->city }}، {{ $business->address }}</p>@foreach($business->phones ?? ($business->phone ? [['label'=>'اصلی','value'=>$business->phone]] : []) as $phone)<a class="mt-4 flex justify-between gap-3" href="tel:{{ preg_replace('/[^+0-9]/','',$phone['value']) }}"><span>{{ $phone['label'] }}</span><bdi dir="ltr">{{ $phone['value'] }}</bdi></a>@endforeach @foreach($business->websites ?? ($business->website ? [['label'=>'وب‌سایت','url'=>$business->website]] : []) as $website)<a class="mt-4 block break-all text-pomegranate" href="{{ $website['url'] }}" rel="nofollow noopener" target="_blank">{{ $website['label'] }} ↗</a>@endforeach @if($business->weekly_hours)<h3 class="mt-6 font-bold">ساعت کار به وقت تهران</h3>@if($hoursStatus)<p class="mt-2 font-bold {{ $hoursStatus['is_open'] ? 'text-positive' : 'text-pomegranate' }}">{{ $hoursStatus['text'] }}</p>@endif<details class="mt-3"><summary class="cursor-pointer text-sm font-semibold">برنامه کامل هفته</summary><dl class="mt-3 space-y-2 text-sm">@foreach(\App\Services\BusinessHours::DAYS as $day)<div class="flex justify-between gap-3"><dt>{{ \App\Services\BusinessHours::LABELS[$day] }}</dt><dd class="text-left">@if($business->weekly_hours[$day]['closed'])تعطیل@else @foreach($business->weekly_hours[$day]['shifts'] as $shift)<span class="block" dir="ltr">{{ $shift['opens'] }}–{{ $shift['closes'] }}{{ $shift['next_day'] ? ' +1' : '' }}</span>@endforeach @endif</dd></div>@endforeach</dl></details>@elseif($business->opening_hours)<h3 class="mt-6 font-bold">ساعت کار به وقت تهران</h3><p class="mt-2 whitespace-pre-wrap text-sm leading-7">{{ $business->opening_hours }}</p>@endif</section></aside>
 </div>
-<dialog data-business-gallery data-gallery-url="{{ route('businesses.show', $business->slug) }}" class="business-gallery-dialog" aria-labelledby="business-gallery-title">
+<dialog data-business-gallery data-gallery-url="{{ route('businesses.show', [$business->slug, 'photo_category' => $selectedPhotoCategory?->value]) }}" class="business-gallery-dialog" aria-labelledby="business-gallery-title">
     <div class="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-6">
         <div><h2 id="business-gallery-title" class="font-bold">گالری {{ $business->name }}</h2><p data-gallery-count class="mt-1 text-xs text-white/60"></p></div>
         <button type="button" data-gallery-close class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm hover:bg-white/10">بستن<x-icon name="close" class="size-5" /></button>

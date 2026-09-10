@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateBusinessRequest;
 use App\Models\Business;
+use App\Models\BusinessSpecification;
 use App\Models\City;
 use App\Services\UpdateBusinessProfile;
 use Illuminate\Http\RedirectResponse;
@@ -27,9 +28,9 @@ class AdminBusinessController extends Controller
     public function edit(Business $business): View
     {
         abort_unless($business->status === 'approved', 409, 'این کسب‌وکار باید از مسیر بررسی مشارکت مدیریت شود.');
-        $business->load(['photos' => fn ($query) => $query->where('status', 'published')->latest(), 'featuredPhotos']);
+        $business->load(['photos' => fn ($query) => $query->where('status', 'published')->latest(), 'featuredPhotos', 'specifications']);
 
-        return view('business-management.edit', ['business' => $business, 'admin' => true, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
+        return view('business-management.edit', ['business' => $business, 'admin' => true, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get(), 'specifications' => BusinessSpecification::where('is_active', true)->orderBy('position')->get()]);
     }
 
     public function update(UpdateBusinessRequest $request, Business $business, UpdateBusinessProfile $update): RedirectResponse

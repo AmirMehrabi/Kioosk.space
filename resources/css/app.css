@@ -57,6 +57,13 @@
     .discovery-result[data-selected='true'] { @apply bg-pomegranate/5; box-shadow: inset -3px 0 var(--color-pomegranate); }
     .price-option { @apply flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border p-3 text-center text-sm has-checked:border-pomegranate has-checked:bg-pomegranate/5 has-checked:text-pomegranate; }
     .price-option input { @apply size-4 accent-pomegranate; }
+    .specification-option { @apply flex min-h-32 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border border-border bg-surface p-4 text-center transition-colors has-checked:border-pomegranate has-checked:bg-pomegranate/5 has-checked:text-pomegranate; }
+    .specification-option-icon { @apply flex size-12 items-center justify-center rounded-2xl bg-soft text-secondary; }
+    .specification-option:has(input:checked) .specification-option-icon { @apply bg-pomegranate text-white; }
+    .gallery-category { @apply inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-4 text-sm font-semibold text-secondary; }
+    .gallery-category span { @apply rounded-full bg-soft px-2 py-0.5 text-xs; }
+    .gallery-category-active { @apply border-ink bg-ink text-white; }
+    .gallery-category-active span { @apply bg-white/15 text-white; }
     .mobile-bottom-nav { @apply fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-300 lg:hidden; }
     .mobile-bottom-nav.is-hidden { transform: translateY(calc(100% + 1rem)); }
     .mobile-bottom-nav-inner { @apply mx-auto flex max-w-md items-end justify-around gap-1 rounded-2xl border border-border/80 bg-surface/95 px-2 pt-2 shadow-[0_-8px_30px_rgb(36_27_20_/_10%)] backdrop-blur-md; }

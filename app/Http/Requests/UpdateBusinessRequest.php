@@ -6,6 +6,7 @@ use App\Models\Business;
 use App\Models\Media;
 use App\Services\BusinessHours;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Validator;
 
@@ -43,6 +44,9 @@ class UpdateBusinessRequest extends FormRequest
             'weekly_hours' => ['nullable', 'array'], 'weekly_hours.*.closed' => ['required_with:weekly_hours', 'boolean'], 'weekly_hours.*.shifts' => ['nullable', 'array', 'max:4'],
             'weekly_hours.*.shifts.*.opens' => ['required', 'date_format:H:i'], 'weekly_hours.*.shifts.*.closes' => ['required', 'date_format:H:i'], 'weekly_hours.*.shifts.*.next_day' => ['required', 'boolean'],
             'featured_media_ids' => ['nullable', 'array', 'max:5'], 'featured_media_ids.*' => ['uuid', 'distinct', 'exists:media,id'],
+            'specification_ids' => ['nullable', 'array'],
+            'specification_ids.*' => ['integer', 'distinct', Rule::exists('business_specifications', 'id')->where('is_active', true)],
+            'specifications_present' => ['sometimes', 'boolean'],
         ];
     }
 

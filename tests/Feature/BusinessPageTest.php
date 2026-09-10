@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Business;
+use App\Models\BusinessSpecification;
 use App\Models\Media;
 use App\Models\Review;
 use App\Models\User;
@@ -63,6 +64,46 @@ class BusinessPageTest extends TestCase
         $this->get('/businesses/nonexistent-business')->assertNotFound();
     }
 
+    public function test_business_page_only_renders_selected_true_specifications(): void
+    {
+        $business = Business::factory()->create();
+        $petFriendly = BusinessSpecification::where('key', 'pet_friendly')->firstOrFail();
+        $smoking = BusinessSpecification::where('key', 'smoking_allowed')->firstOrFail();
+        $business->specifications()->attach($petFriendly);
+
+        $this->get(route('businesses.show', $business->slug))
+            ->assertSee('امکانات و ویژگی‌ها')
+            ->assertSee($petFriendly->label)
+            ->assertDontSee($smoking->label);
+    }
+
+    public function test_business_page_hides_specification_section_when_none_are_true(): void
+    {
+        $business = Business::factory()->create();
+
+        $this->get(route('businesses.show', $business->slug))
+            ->assertDontSee('امکانات و ویژگی‌ها');
+    }
+
+    public function test_gallery_filters_photos_by_category_and_keeps_uncategorized_photos_in_other(): void
+    {
+        $business = Business::factory()->create();
+        $user = User::factory()->create();
+        $interior = $this->photo($business, $user, 'interior', 'inside.jpg');
+        $exterior = $this->photo($business, $user, 'exterior', 'outside.jpg');
+        $uncategorized = $this->photo($business, $user, null, 'other.jpg');
+
+        $this->getJson(route('businesses.show', [$business->slug, 'photo_category' => 'interior']))
+            ->assertOk()->assertJsonCount(1, 'photos')->assertJsonPath('photos.0.id', $interior->id)
+            ->assertJsonPath('counts.all', 3)->assertJsonPath('counts.interior', 1);
+
+        $this->getJson(route('businesses.show', [$business->slug, 'photo_category' => 'other']))
+            ->assertOk()->assertJsonCount(1, 'photos')->assertJsonPath('photos.0.id', $uncategorized->id);
+        $this->getJson(route('businesses.show', [$business->slug, 'photo_category' => 'invalid']))
+            ->assertUnprocessable()->assertJsonValidationErrors('photo_category');
+        $this->assertNotSame($exterior->id, $interior->id);
+    }
+
     public function test_homepage_review_cards_link_to_their_businesses(): void
     {
         foreach (self::businesses() as [$slug, $name]) {
@@ -73,6 +114,15 @@ class BusinessPageTest extends TestCase
         foreach (self::businesses() as [$slug, $name]) {
             $response->assertSee(route('businesses.show', $slug), false);
         }
+    }
+
+    private function photo(Business $business, User $user, ?string $category, string $path): Media
+    {
+        return Media::create([
+            'id' => (string) Str::uuid(), 'user_id' => $user->id, 'client_id' => (string) Str::uuid(),
+            'business_id' => $business->id, 'path' => $path, 'thumbnail_path' => 'thumb-'.$path,
+            'status' => 'published', 'source' => 'management', 'category' => $category,
+        ]);
     }
 
     public function test_city_search_is_backed_by_the_managed_city_list(): void
