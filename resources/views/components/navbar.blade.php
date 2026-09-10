@@ -1,5 +1,5 @@
 @props(['minimal' => false, 'portal' => null])
-<header @class(['relative z-30 bg-surface', 'border-b border-border/70' => ! request()->routeIs('home')])>
+<header @class(['mobile-top-nav relative z-30 bg-surface', 'border-b border-border/70' => ! request()->routeIs('home')])>
     <nav class="flex min-h-22 flex-wrap items-center gap-x-5 gap-y-4 px-4 py-4" aria-label="فهرست اصلی">
         <a href="{{ route('home') }}" aria-label="صفحه اصلی کیوسک" class="shrink-0"><img src="{{ asset('images/logo/logo-fa.png') }}" class="w-32 sm:w-36" alt=""></a>
         @unless($minimal)
@@ -20,3 +20,32 @@
         </div>
     </nav>
 </header>
+
+<nav data-mobile-nav class="mobile-bottom-nav" aria-label="دسترسی سریع">
+    <div class="mobile-bottom-nav-inner">
+        <a href="{{ route('home') }}" aria-label="خانه" title="خانه" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('home')]) @if(request()->routeIs('home')) aria-current="page" @endif>
+            <x-icon name="home" />
+        </a>
+        <a href="{{ route('discovery') }}" aria-label="کشف مکان‌ها" title="کشف مکان‌ها" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('discovery')]) @if(request()->routeIs('discovery')) aria-current="page" @endif>
+            <x-icon name="map" />
+        </a>
+        <a href="{{ route('contribute') }}" aria-label="افزودن مکان یا تجربه" title="افزودن مکان یا تجربه" class="mobile-nav-item mobile-nav-create" @if(request()->routeIs('contribute')) aria-current="page" @endif>
+            <span class="mobile-nav-create-icon"><x-icon name="plus" /></span>
+        </a>
+        @auth
+            <a href="{{ route('contributions.index') }}" aria-label="مشارکت‌های من" title="مشارکت‌های من" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('contributions.*')]) @if(request()->routeIs('contributions.*')) aria-current="page" @endif>
+                <x-icon name="edit" />
+            </a>
+            <a href="{{ route('account') }}" aria-label="حساب کاربری" title="حساب کاربری" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('account')]) @if(request()->routeIs('account')) aria-current="page" @endif>
+                <x-icon name="user" />
+            </a>
+        @else
+            <a href="{{ route('login') }}" aria-label="ورود" title="ورود" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
+                <x-icon name="phone" />
+            </a>
+            <a href="{{ route('contact') }}" aria-label="تماس با ما" title="تماس با ما" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('contact')]) @if(request()->routeIs('contact')) aria-current="page" @endif>
+                <x-icon name="message" />
+            </a>
+        @endauth
+    </div>
+</nav>

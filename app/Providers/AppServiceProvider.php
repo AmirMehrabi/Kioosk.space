@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         View::composer('components.navbar', function (\Illuminate\View\View $view): void {
-            $view->with('searchCities', City::orderBy('name')->get());
+            $view->with('searchCities', City::where('is_active', true)->orderBy('position')->orderBy('name')->get());
         });
 
         RateLimiter::for('otp-send', function (Request $request) {

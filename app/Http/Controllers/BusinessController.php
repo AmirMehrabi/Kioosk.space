@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Business;
+use App\Models\Category;
 use App\Models\City;
 use App\Models\Review;
 use App\Services\BusinessHours;
@@ -34,18 +35,18 @@ class BusinessController extends Controller
                 ->whereHas('heroPhoto', fn (Builder $query) => $query->whereColumn('media.business_id', 'businesses.id'))
                 ->with('heroPhoto')->orderBy('businesses.id')->first(),
             'recentReviews' => $recentReviews,
-            'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get(),
+            'categories' => Category::where('is_active', true)->orderBy('position')->orderBy('name')->get(), 'cities' => City::where('is_active', true)->orderBy('position')->orderBy('name')->get(),
         ]);
     }
 
     public function discovery(Request $request): View
     {
         $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer', 'exists:categories,id']]);
-        $cities = City::orderBy('name')->get();
+        $cities = City::where('is_active', true)->orderBy('position')->orderBy('name')->get();
         $city = $cities->firstWhere('name', $request->input('city') ?: $request->session()->get('discovery.city'))
             ?? $cities->firstWhere('name', 'تهران') ?? $cities->first();
         $request->session()->put('discovery.city', $city?->name);
-        $categories = DB::table('categories')->get();
+        $categories = Category::where('is_active', true)->orderBy('position')->orderBy('name')->get();
         $term = BusinessIdentity::normalize($request->input('query') ?? '');
         $matchingCategories = $categories->filter(fn ($category) => $term !== '' && str_contains(BusinessIdentity::normalize($category->name), $term))->pluck('id');
         $businesses = Business::where('status', 'approved')
@@ -78,7 +79,7 @@ class BusinessController extends Controller
         if ($request->filled(['latitude', 'longitude'])) {
             $query->orderByRaw('(COALESCE(latitude, 0) - ?) * (COALESCE(latitude, 0) - ?) + (COALESCE(longitude, 0) - ?) * (COALESCE(longitude, 0) - ?)', [$request->input('latitude'), $request->input('latitude'), $request->input('longitude'), $request->input('longitude')]);
         }
-        $categories = DB::table('categories')->pluck('name', 'id');
+        $categories = Category::where('is_active', true)->pluck('name', 'id');
 
         return response()->json($query->orderBy('businesses.id')->paginate(12)->through(fn ($business) => [
             'id' => $business->id, 'name' => $business->name, 'city' => $business->city, 'address' => $business->address, 'category' => $categories[$business->category_id] ?? '',

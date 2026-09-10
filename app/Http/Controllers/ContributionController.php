@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ContributionRequest;
 use App\Models\Business;
+use App\Models\Category;
 use App\Models\City;
 use App\Models\ContributionDraft;
 use App\Models\Review;
@@ -35,7 +36,7 @@ class ContributionController extends Controller
             }
         }
 
-        return view('contributions.create', ['initial' => $initial, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
+        return view('contributions.create', ['initial' => $initial, 'categories' => Category::where('is_active', true)->orderBy('position')->orderBy('name')->get(), 'cities' => City::where('is_active', true)->orderBy('position')->orderBy('name')->get()]);
     }
 
     public function index(Request $request): View

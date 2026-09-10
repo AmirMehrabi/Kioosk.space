@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-dvh bg-canvas font-sans text-ink antialiased">
+<body class="min-h-dvh bg-canvas pb-20 font-sans text-ink antialiased lg:pb-0">
 <a href="#main" class="sr-only focus:not-sr-only">رفتن به محتوای اصلی</a>
 <x-navbar :minimal="request()->routeIs('contribute', 'reviews.edit')" />
 <main id="main">

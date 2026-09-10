@@ -11,6 +11,12 @@
             $breadcrumbs[] = ['label' => 'کسب‌وکارها', 'url' => route('admin.businesses.index')];
         } elseif (request()->routeIs('admin.claims*')) {
             $breadcrumbs[] = ['label' => 'درخواست‌های مالکیت'];
+        } elseif (request()->routeIs('admin.users*')) {
+            $breadcrumbs[] = ['label' => 'کاربران و همکاران'];
+        } elseif (request()->routeIs('admin.taxonomy*')) {
+            $breadcrumbs[] = ['label' => 'شهرها و دسته‌بندی‌ها'];
+        } elseif (request()->routeIs('admin.audit-log*')) {
+            $breadcrumbs[] = ['label' => 'تاریخچه فعالیت‌ها'];
         }
         if (request()->routeIs('admin.submissions.show')) {
             $breadcrumbs[] = ['label' => $business->name];
@@ -30,6 +36,12 @@
                     @foreach(['admin.dashboard' => 'داشبورد', 'admin.businesses.index' => 'کسب‌وکارها', 'admin.submissions' => 'مشارکت‌ها', 'admin.claims.index' => 'درخواست‌های مالکیت', 'admin.reports' => 'گزارش‌ها'] as $destination => $label)
                         <a @class(['admin-nav-item shrink-0', 'admin-nav-item-active' => request()->routeIs($destination, $destination.'.*')]) href="{{ route($destination) }}" @if(request()->routeIs($destination, $destination.'.*')) aria-current="{{ request()->routeIs($destination) ? 'page' : 'location' }}" @endif>{{ $label }}</a>
                     @endforeach
+                    @if(auth()->user()->platform_role === \App\Enums\PlatformRole::Superadmin)
+                        <div class="my-3 hidden border-t border-border lg:block"></div>
+                        @foreach(['admin.users.index' => 'کاربران و همکاران', 'admin.taxonomy.index' => 'شهرها و دسته‌بندی‌ها', 'admin.audit-log.index' => 'تاریخچه فعالیت‌ها'] as $destination => $label)
+                            <a @class(['admin-nav-item shrink-0', 'admin-nav-item-active' => request()->routeIs($destination, str_replace('.index', '.*', $destination))]) href="{{ route($destination) }}" @if(request()->routeIs($destination, str_replace('.index', '.*', $destination))) aria-current="page" @endif>{{ $label }}</a>
+                        @endforeach
+                    @endif
                 </nav>
                 <a class="nav-link mt-3 hidden w-full gap-2 border-t border-border pt-3 lg:flex" href="{{ route('home') }}">مشاهده کیوسک <span aria-hidden="true">←</span></a>
             </div>

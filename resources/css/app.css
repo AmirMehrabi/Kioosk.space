@@ -25,6 +25,7 @@
     button, a, input, textarea, select, summary { &:focus-visible { outline: 2px solid var(--color-pomegranate); outline-offset: 3px; } }
 }
 @layer components {
+    .mobile-top-nav { @apply hidden lg:block; }
     .rating-progress { appearance: none; border: 0; background: var(--color-soft); }
     .rating-progress::-webkit-progress-bar { background: var(--color-soft); border-radius: 999px; }
     .rating-progress::-webkit-progress-value { background: var(--color-pomegranate); border-radius: 999px; }
@@ -56,6 +57,20 @@
     .discovery-result[data-selected='true'] { @apply bg-pomegranate/5; box-shadow: inset -3px 0 var(--color-pomegranate); }
     .price-option { @apply flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-xl border border-border p-3 text-center text-sm has-checked:border-pomegranate has-checked:bg-pomegranate/5 has-checked:text-pomegranate; }
     .price-option input { @apply size-4 accent-pomegranate; }
+    .mobile-bottom-nav { @apply fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] transition-transform duration-300 lg:hidden; }
+    .mobile-bottom-nav.is-hidden { transform: translateY(calc(100% + 1rem)); }
+    .mobile-bottom-nav-inner { @apply mx-auto flex max-w-md items-end justify-around gap-1 rounded-2xl border border-border/80 bg-surface/95 px-2 pt-2 shadow-[0_-8px_30px_rgb(36_27_20_/_10%)] backdrop-blur-md; }
+    .mobile-nav-item { @apply relative flex min-h-14 min-w-0 flex-1 items-center justify-center rounded-xl px-1 text-muted transition-colors hover:bg-soft hover:text-ink; }
+    .mobile-nav-item svg { @apply size-6; }
+    .mobile-nav-item-active { @apply bg-pomegranate/5 text-pomegranate; }
+    .mobile-nav-item-active::after { content: ''; @apply absolute bottom-1 size-1 rounded-full bg-pomegranate; }
+    .mobile-nav-create { @apply -translate-y-2 text-ink hover:bg-transparent hover:text-pomegranate; }
+    .mobile-nav-create-icon { @apply flex size-12 items-center justify-center rounded-full border-4 border-canvas bg-pomegranate text-white shadow-md; }
+    .mobile-nav-create-icon svg { @apply size-6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-bottom-nav { transition: none; }
 }
 
 .leaflet-container { font-family: var(--font-sans); background: var(--color-soft); }

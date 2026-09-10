@@ -7,6 +7,7 @@
         @case('sparkles') <path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM3 3v4M1 5h4m15 13v4m-2-2h4"/> @break
         @case('home') <path d="m3 11 9-8 9 8M5 9v12h14V9M9 21v-8h6v8"/> @break
         @case('compass') <circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6Z"/> @break
+        @case('map') <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15m6-12v15"/> @break
         @case('star') <path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.2-5.7-3-5.7 3 1.1-6.2L3 9.6l6.2-.9Z"/> @break
         @case('search') <circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/> @break
         @case('pin') <path d="M20 10c0 6-8 11-8 11S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/> @break
@@ -28,6 +29,7 @@
         @case('coffee') <path d="M4 8h12v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5ZM16 9h2a3 3 0 0 1 0 6h-2M7 2v3m4-3v3m4-3v3"/> @break
         @case('card') <rect x="2" y="4" width="20" height="16" rx="3"/><path d="M2 10h20M6 15h3"/> @break
         @case('users') <circle cx="9" cy="7" r="4"/><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 3a4 4 0 0 1 0 8m3 10v-3a7 7 0 0 0-3-6"/> @break
+        @case('user') <circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/> @break
         @case('leaf') <path d="M20 3c-8-2-15 3-15 9a7 7 0 0 0 7 7c6 0 9-8 8-16ZM3 21 15 9"/> @break
         @case('message') <path d="M21 11a8 8 0 0 1-8 8H8l-5 3V7a4 4 0 0 1 4-4h6a8 8 0 0 1 8 8Z"/><path d="M7 8h9M7 12h6"/> @break
         @case('thumb') <path d="M7 10 11 3h2v7h6a2 2 0 0 1 2 2l-2 7a2 2 0 0 1-2 2H7ZM3 10h4v11H3Z"/> @break

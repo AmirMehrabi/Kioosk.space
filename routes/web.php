@@ -1,9 +1,12 @@
 <?php
 
 use App\Enums\Portal;
+use App\Http\Controllers\AdminAuditLogController;
 use App\Http\Controllers\AdminBusinessClaimController;
 use App\Http\Controllers\AdminBusinessController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminTaxonomyController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\BusinessClaimController;
 use App\Http\Controllers\BusinessController;
@@ -65,6 +68,15 @@ Route::middleware([AuthResponseHeaders::class, EnsurePortalAccess::class.':admin
     Route::delete('/businesses/{business}/photos/{media}', [BusinessMediaController::class, 'destroy'])->name('admin.businesses.photos.destroy');
     Route::get('/ownership-claims', [AdminBusinessClaimController::class, 'index'])->name('admin.claims.index');
     Route::post('/ownership-claims/{claim}', [AdminBusinessClaimController::class, 'update'])->name('admin.claims.update');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('admin.users.store');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::get('/taxonomy', [AdminTaxonomyController::class, 'index'])->name('admin.taxonomy.index');
+    Route::post('/taxonomy/cities', [AdminTaxonomyController::class, 'storeCity'])->name('admin.taxonomy.cities.store');
+    Route::put('/taxonomy/cities/{city}', [AdminTaxonomyController::class, 'updateCity'])->name('admin.taxonomy.cities.update');
+    Route::post('/taxonomy/categories', [AdminTaxonomyController::class, 'storeCategory'])->name('admin.taxonomy.categories.store');
+    Route::put('/taxonomy/categories/{category}', [AdminTaxonomyController::class, 'updateCategory'])->name('admin.taxonomy.categories.update');
+    Route::get('/audit-log', [AdminAuditLogController::class, 'index'])->name('admin.audit-log.index');
 });
 Route::get('/businesses/{slug}', [BusinessController::class, 'show'])->name('businesses.show');
 

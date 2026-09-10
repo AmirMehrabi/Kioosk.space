@@ -4,12 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class City extends Model
+class Category extends Model
 {
+    public $timestamps = false;
+
     protected $guarded = ['id'];
 
     protected function casts(): array
     {
-        return ['latitude' => 'float', 'longitude' => 'float', 'is_active' => 'boolean'];
+        return ['is_active' => 'boolean'];
     }
 }

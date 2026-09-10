@@ -51,6 +51,20 @@ class ContributionTest extends TestCase
         return $user;
     }
 
+    public function test_contributions_page_prioritizes_follow_up_actions_and_primary_contribution_action(): void
+    {
+        $user = $this->contributor();
+
+        $response = $this->actingAs($user)->get(route('contributions.index'));
+
+        $response->assertOk()
+            ->assertSee('کارهای نیازمند توجه')
+            ->assertSee('پیش‌نویس‌های ناتمام')
+            ->assertSee('پیام‌های مدیریت')
+            ->assertSee('افزودن مکان یا تجربه')
+            ->assertSee('مکان‌های ذخیره‌شده');
+    }
+
     public function test_combined_submission_is_private_idempotent_and_approval_publishes_rating_and_media(): void
     {
         Storage::fake('local');

@@ -6,6 +6,30 @@ import './business-management';
 import './home-feed';
 import './business-gallery';
 
+const mobileNav = document.querySelector('[data-mobile-nav]');
+if (mobileNav) {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+
+    const updateMobileNav = () => {
+        const currentScrollY = window.scrollY;
+        const movingDown = currentScrollY > lastScrollY;
+        const pastHeader = currentScrollY > 96;
+
+        mobileNav.classList.toggle('is-hidden', movingDown && pastHeader);
+        if (!movingDown || currentScrollY <= 16) mobileNav.classList.remove('is-hidden');
+        lastScrollY = Math.max(currentScrollY, 0);
+        ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(updateMobileNav);
+            ticking = true;
+        }
+    }, {passive: true});
+}
+
 document.querySelectorAll('img[data-media-skeleton]').forEach(image => {
     const reveal = () => image.classList.add('media-loaded');
     if (image.complete && image.naturalWidth > 0) reveal();

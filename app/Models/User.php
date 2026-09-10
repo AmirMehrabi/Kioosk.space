@@ -7,6 +7,7 @@ use App\Enums\PlatformRole;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,6 +40,11 @@ class User extends Authenticatable
     public function hasStaffAccess(): bool
     {
         return ! $this->suspended_at && in_array($this->platform_role, [PlatformRole::Admin, PlatformRole::Superadmin], true);
+    }
+
+    public function scopeStaff(Builder $query): void
+    {
+        $query->whereIn('platform_role', [PlatformRole::Admin, PlatformRole::Superadmin]);
     }
 
     public function ownedBusinesses(): BelongsToMany
