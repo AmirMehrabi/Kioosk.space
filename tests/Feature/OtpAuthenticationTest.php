@@ -45,7 +45,7 @@ class OtpAuthenticationTest extends TestCase
     #[DataProvider('portals')]
     public function test_all_portals_render_farsi_forms_and_require_a_challenge(string $prefix): void
     {
-        $this->get($prefix.'/login')->assertOk()->assertSee('lang="fa" dir="rtl"', false)->assertSee('شماره موبایل')->assertHeader('Cache-Control', 'no-store, private');
+        $this->get($prefix.'/login')->assertOk()->assertSee('lang="fa" dir="rtl"', false)->assertSee('شماره موبایل')->assertSee('rel="icon" type="image/png" href="'.asset('images/logo/red-bookmark.png').'"', false)->assertHeader('Cache-Control', 'no-store, private');
         $this->get($prefix.'/verify')->assertRedirect($prefix.'/login');
         $this->post($prefix.'/verify', ['code' => '12345'])->assertSessionHasErrors('code');
         $this->assertGuest();
@@ -206,9 +206,26 @@ class OtpAuthenticationTest extends TestCase
         $sms = $this->captureSms();
         $this->post('/business/login', ['mobile' => '09123456789', 'role' => 'owner', 'business_id' => 1])->assertRedirect('/business/verify');
         $this->post('/business/verify', ['code' => $sms->messages[0]['code']])->assertRedirect('/business/dashboard');
-        $this->get('/business/dashboard')->assertOk()->assertSee('هنوز کسب‌وکاری به حساب شما متصل نیست');
+        $this->get('/business/dashboard')->assertOk()
+            ->assertSee('مدیریت کسب‌وکارها')
+            ->assertSee('کسب‌وکارهای متصل')
+            ->assertSee('هنوز کسب‌وکاری به حساب شما متصل نیست')
+            ->assertSee('درخواست مالکیت');
         $this->assertDatabaseCount('business_user', 0);
         $this->get('/admin/dashboard')->assertForbidden();
+    }
+
+    public function test_account_page_explains_the_available_personal_actions(): void
+    {
+        $user = User::factory()->create(['mobile_verified_at' => now(), 'name' => 'نگار رضایی']);
+
+        $this->actingAs($user)->get('/account')->assertOk()
+            ->assertSee('فضای شخصی شما در کیوسک')
+            ->assertSee('کارهایی که می‌توانید انجام دهید')
+            ->assertSee('مشارکت‌های من')
+            ->assertSee('کشف مکان‌های شهر')
+            ->assertSee('بخش کسب‌وکارها')
+            ->assertSee('مشخصات حساب');
     }
 
     public function test_business_portal_only_shows_approved_ownerships_of_current_user(): void
@@ -221,7 +238,12 @@ class OtpAuthenticationTest extends TestCase
             $business->save();
             $business->owners()->attach($owner, ['role' => 'owner', 'approved_at' => $approved]);
         }
-        $this->actingAs($user)->get('/business/dashboard')->assertOk()->assertSee('کافه خودم')->assertDontSee('کافه دیگران')->assertDontSee('مالکیت تأییدنشده');
+        $this->actingAs($user)->get('/business/dashboard')->assertOk()
+            ->assertSee('مدیریت کسب‌وکارها')
+            ->assertSee('کافه خودم')
+            ->assertSee('مدیریت اطلاعات')
+            ->assertDontSee('کافه دیگران')
+            ->assertDontSee('مالکیت تأییدنشده');
     }
 
     public static function staffRoles(): array

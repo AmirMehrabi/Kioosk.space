@@ -24,6 +24,7 @@ class HomePageTest extends TestCase
 
         $response->assertOk()->assertSee('جای خوب،')->assertSee('همین دوروبره.')
             ->assertSee('تازه‌ترین تجربه‌ها')->assertSee('امروز دنبال چی می‌گردی؟')->assertSee(route('discovery'))
+            ->assertSee('rel="icon" type="image/png" href="'.asset('images/logo/red-bookmark.png').'"', false)
             ->assertSee('id="navbar-query"', false)->assertDontSee('id="places"', false)
             ->assertDontSee('id="discovery-map"', false)->assertDontSee('id="discovery-data"', false)
             ->assertSee('data-media-skeleton', false);
