@@ -41,7 +41,7 @@
             </a>
         @else
             <a href="{{ route('login') }}" aria-label="ورود" title="ورود" data-mobile-login @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
-                <x-icon name="crown" />
+                <x-icon name="user" />
             </a>
         @endauth
     </div>
