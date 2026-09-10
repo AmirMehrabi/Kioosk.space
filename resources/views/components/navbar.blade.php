@@ -15,7 +15,7 @@
             @auth
                 <x-profile-menu :user="auth()->user()" />
             @else
-                <a class="button-secondary whitespace-nowrap !px-3 sm:!px-4" href="{{ route(isset($portal) ? $portal->route('login') : 'login') }}">ورود@if($portal !== \App\Enums\Portal::Admin)<span class="hidden sm:inline"> / ثبت‌نام</span>@endif</a>
+                <a class="button-secondary whitespace-nowrap !px-3 sm:!px-4" href="{{ route(isset($portal) ? $portal->route('login') : 'login') }}">ورود</a>
             @endauth
         </div>
     </nav>
@@ -40,8 +40,9 @@
                 <x-icon name="user" />
             </a>
         @else
-            <a href="{{ route('login') }}" aria-label="ورود" title="ورود" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
+            <a href="{{ route('login') }}" aria-label="ورود" title="ورود" @class(['mobile-nav-item flex-col gap-1', 'mobile-nav-item-active' => request()->routeIs('login')]) @if(request()->routeIs('login')) aria-current="page" @endif>
                 <x-icon name="phone" />
+                <span class="text-xs font-semibold">ورود</span>
             </a>
             <a href="{{ route('contact') }}" aria-label="تماس با ما" title="تماس با ما" @class(['mobile-nav-item', 'mobile-nav-item-active' => request()->routeIs('contact')]) @if(request()->routeIs('contact')) aria-current="page" @endif>
                 <x-icon name="message" />

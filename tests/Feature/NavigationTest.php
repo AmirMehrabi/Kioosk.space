@@ -22,6 +22,13 @@ class NavigationTest extends TestCase
             ->assertSee('value="cafe"', false);
     }
 
+    public function test_unauthenticated_navigation_shows_a_visible_login_option(): void
+    {
+        $this->get('/')->assertSee(route('login'), false)
+            ->assertSee('>ورود</a>', false)
+            ->assertSee('>ورود</span>', false);
+    }
+
     public function test_admin_preview_has_a_breadcrumb_back_to_the_submission_queue(): void
     {
         $admin = User::factory()->create(['mobile_verified_at' => now(), 'platform_role' => PlatformRole::Admin]);

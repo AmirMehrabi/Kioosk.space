@@ -70,7 +70,6 @@
     .mobile-nav-item { @apply relative flex min-h-14 min-w-0 flex-1 items-center justify-center rounded-xl px-1 text-muted transition-colors hover:bg-soft hover:text-ink; }
     .mobile-nav-item svg { @apply size-6; }
     .mobile-nav-item-active { @apply bg-pomegranate/5 text-pomegranate; }
-    .mobile-nav-item-active::after { content: ''; @apply absolute bottom-1 size-1 rounded-full bg-pomegranate; }
     .mobile-nav-create { @apply -translate-y-2 text-ink hover:bg-transparent hover:text-pomegranate; }
     .mobile-nav-create-icon { @apply flex size-12 items-center justify-center rounded-full border-4 border-canvas bg-pomegranate text-white shadow-md; }
     .mobile-nav-create-icon svg { @apply size-6; }
@@ -106,6 +105,7 @@
 @layer components {
     .navbar-search [data-city-select] > label { @apply sr-only; }
     .navbar-search .field { @apply m-0 min-h-11 rounded-none border-0 bg-transparent px-2 py-2 text-sm shadow-none; }
+    .navbar-search [data-city-select] input:focus-visible { outline-offset: -2px; }
     .navbar-search [data-city-options] { @apply z-50 min-w-40; }
 
     .home-review { box-shadow: 0 3px 12px rgb(36 27 20 / 2%); }
