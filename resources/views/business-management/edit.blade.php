@@ -48,7 +48,7 @@
 <section class="panel" aria-labelledby="homepage-feature-title">
     <div class="flex items-start gap-3"><span class="rounded-xl bg-pomegranate/10 p-3 text-pomegranate"><x-icon name="sparkles" /></span><div><h2 id="homepage-feature-title" class="text-xl font-bold">معرفی در صفحه اصلی کیوسک</h2><p class="mt-2 text-sm leading-7 text-muted">یک عکس افقی و باکیفیت انتخاب کنید. نام، شهر و خلاصهٔ معرفی کسب‌وکار روی تصویر نمایش داده می‌شود.</p></div></div>
     <label class="mt-5 flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border border-border bg-canvas p-4 font-semibold"><input type="hidden" name="is_featured" value="0"><input type="checkbox" name="is_featured" value="1" class="size-5 accent-pomegranate" @checked(old('is_featured', $business->is_featured))>نمایش این کسب‌وکار در صفحه اصلی</label>
-    <p class="mt-2 text-sm leading-7 text-muted">با فعال‌کردن و ذخیره، این کسب‌وکار جایگزین انتخاب قبلی صفحه اصلی می‌شود.</p>
+    <p class="mt-2 text-sm leading-7 text-muted">می‌توانید چند کسب‌وکار را هم‌زمان ویژه کنید؛ در هر بار باز شدن صفحه اصلی، یکی از آن‌ها به‌صورت تصادفی نمایش داده می‌شود.</p>
     @error('is_featured')<p class="field-error">{{ $message }}</p>@enderror
     <fieldset class="mt-5">
         <legend class="font-semibold">تصویر صفحه اصلی</legend>

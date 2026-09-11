@@ -47,18 +47,25 @@ class HomepageFeaturedBusinessTest extends TestCase
         $first->featuredPhotos()->attach($gallery, ['position' => 1]);
         $first->update(['hero_media_id' => $selected->id]);
         $second = Business::factory()->create(['is_featured' => true]);
-        $second->update(['hero_media_id' => $this->photo($second)->id]);
+        $secondPhoto = $this->photo($second);
+        $second->update(['hero_media_id' => $secondPhoto->id]);
 
-        $response = $this->get(route('home'))->assertOk()
-            ->assertSee('src="'.route('media.show', $selected).'"', false)
-            ->assertSee('href="'.route('businesses.show', $first->slug).'"', false)
-            ->assertSee($first->name)->assertSee($description)->assertDontSee($description, false)
-            ->assertDontSee(route('media.show', $gallery));
-
+        $response = $this->get(route('home'))->assertOk();
         $featured = $response->viewData('featuredBusiness');
-        $this->assertSame($first->id, $featured->id);
+        $this->assertNotNull($featured);
+        $this->assertContains($featured->id, [$first->id, $second->id]);
         $this->assertTrue($featured->relationLoaded('heroPhoto'));
-        $this->assertSame($selected->id, $featured->heroPhoto->id);
+        if ($featured->id === $first->id) {
+            $this->assertSame($selected->id, $featured->heroPhoto->id);
+            $response->assertSee('src="'.route('media.show', $selected).'"', false)
+                ->assertSee('href="'.route('businesses.show', $first->slug).'"', false)
+                ->assertSee($first->name)->assertSee($description)->assertDontSee($description, false)
+                ->assertDontSee(route('media.show', $gallery));
+        } else {
+            $this->assertSame($secondPhoto->id, $featured->heroPhoto->id);
+            $response->assertSee('src="'.route('media.show', $secondPhoto).'"', false)
+                ->assertSee('href="'.route('businesses.show', $second->slug).'"', false);
+        }
     }
 
     #[TestWith(['pending', 'published'])]
@@ -118,8 +125,8 @@ class HomepageFeaturedBusinessTest extends TestCase
         $this->put(route('admin.businesses.update', $business), $profile + ['is_featured' => '1', 'hero_media_id' => $hero->id])
             ->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseHas('businesses', ['id' => $business->id, 'is_featured' => true, 'hero_media_id' => $hero->id]);
-        $this->assertDatabaseHas('businesses', ['id' => $previous->id, 'is_featured' => false, 'hero_media_id' => $previousPhoto->id]);
-        $this->get(route('home'))->assertOk()->assertViewHas('featuredBusiness', fn (Business $featured): bool => $featured->id === $business->id);
+        $this->assertDatabaseHas('businesses', ['id' => $previous->id, 'is_featured' => true, 'hero_media_id' => $previousPhoto->id]);
+        $this->get(route('home'))->assertOk()->assertViewHas('featuredBusiness', fn (Business $featured): bool => in_array($featured->id, [$business->id, $previous->id], true));
         $this->assertSame($gallery->id, $business->featuredPhotos()->firstOrFail()->id);
 
         $this->put(route('admin.businesses.update', $business), $profile + ['hero_media_id' => $replacement->id])

@@ -17,12 +17,23 @@ class AdminBusinessController extends Controller
 {
     public function index(Request $request): View
     {
-        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'status' => ['nullable', Rule::in(['approved', 'pending', 'corrections', 'incomplete', 'rejected', 'merged'])], 'city' => ['nullable', 'string'], 'category' => ['nullable', 'integer']]);
+        $request->validate([
+            'query' => ['nullable', 'string', 'max:180'],
+            'status' => ['nullable', Rule::in(['approved', 'pending', 'corrections', 'incomplete', 'rejected', 'merged'])],
+            'city' => ['nullable', 'string'],
+            'category' => ['nullable', 'integer'],
+            'featured' => ['nullable', Rule::in(['1', '0', 'all'])],
+        ]);
         $businesses = Business::query()->with('featuredPhotos')->when($request->filled('query'), fn ($query) => $query->where('name', 'like', '%'.$request->string('query').'%'))
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')))->when($request->filled('city'), fn ($query) => $query->where('city', $request->string('city')))
-            ->when($request->integer('category'), fn ($query) => $query->where('category_id', $request->integer('category')))->latest('id')->paginate(20)->withQueryString();
+            ->when($request->integer('category'), fn ($query) => $query->where('category_id', $request->integer('category')))
+            ->when($request->input('featured') === '1', fn ($query) => $query->where('is_featured', true))
+            ->when($request->input('featured') === '0', fn ($query) => $query->where('is_featured', false))
+            ->latest('id')->paginate(20)->withQueryString();
 
-        return view('business-management.index', ['businesses' => $businesses, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
+        $featuredBusinesses = Business::where('is_featured', true)->with(['featuredPhotos', 'heroPhoto'])->latest('id')->get();
+
+        return view('business-management.index', ['businesses' => $businesses, 'featuredBusinesses' => $featuredBusinesses, 'categories' => DB::table('categories')->get(), 'cities' => City::orderBy('name')->get()]);
     }
 
     public function edit(Business $business): View
