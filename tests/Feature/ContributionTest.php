@@ -229,7 +229,22 @@ class ContributionTest extends TestCase
 
         $this->postJson('/contribution-drafts/'.$draft->id.'/submit')
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('websites.0.url');
+            ->assertJsonValidationErrors('websites.0.url')
+            ->assertJsonFragment(['websites.0.url' => ['آدرس وب‌سایت باید با https:// یا http:// شروع شود.']]);
+        $this->assertSame('draft', $draft->fresh()->status);
+    }
+
+    public function test_invalid_opening_hours_return_a_readable_field_error_without_saving(): void
+    {
+        $draft = $this->draft($this->contributor());
+
+        $this->putJson('/contribution-drafts/'.$draft->id, [
+            ...$draft->payload,
+            'version' => 2,
+            'weekly_hours' => ['saturday' => ['closed' => false, 'shifts' => [['opens' => 'invalid', 'closes' => '17:00', 'next_day' => false]]]],
+        ])->assertUnprocessable()
+            ->assertJsonFragment(['weekly_hours.saturday.shifts.0.opens' => ['قالب ساعت شروع معتبر نیست؛ ساعت را مانند ۰۹:۳۰ وارد کنید.']]);
+        $this->assertSame(2, $draft->fresh()->version);
     }
 
     public function test_malicious_image_is_rejected_and_photo_limit_is_enforced(): void

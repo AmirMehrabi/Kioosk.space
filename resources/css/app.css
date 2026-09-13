@@ -21,6 +21,8 @@
 }
 
 @layer base {
+    html { overflow-x: hidden; scrollbar-gutter: stable; }
+    body { overflow-x: hidden; }
     [x-cloak] { display: none !important; }
     button, a, input, textarea, select, summary { &:focus-visible { outline: 2px solid var(--color-pomegranate); outline-offset: 3px; } }
 }
@@ -171,3 +173,42 @@
 .media-skeleton.media-loaded { animation: none; opacity: 1; }
 @keyframes media-shimmer { to { background-position-x: -200%; } }
 @media (prefers-reduced-motion: reduce) { .media-skeleton { animation: none; } }
+
+@layer components {
+    #contribution-app .contribution-steps { @apply flex items-start gap-2; }
+    #contribution-app .contribution-steps li { @apply flex min-w-0 flex-1 flex-col items-center gap-2 text-center text-xs leading-5 text-muted sm:text-sm; }
+    #contribution-app .contribution-step-number { @apply flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-canvas font-bold; }
+    #contribution-app .contribution-steps [data-state='current'] { @apply font-bold text-pomegranate; }
+    #contribution-app .contribution-steps [data-state='current'] .contribution-step-number { @apply border-pomegranate bg-pomegranate text-white; }
+    #contribution-app .contribution-steps [data-state='complete'] { @apply text-positive; }
+    #contribution-app .contribution-steps [data-state='complete'] .contribution-step-number { @apply border-positive/20 bg-positive/10; }
+    #contribution-app .contribution-alert { @apply rounded-xl border border-pomegranate/30 bg-pomegranate/5 p-4 text-sm leading-7 text-pomegranate-dark; }
+    #contribution-app .contribution-alert strong::before { content: '!'; @apply me-2 inline-flex size-5 items-center justify-center rounded-full bg-pomegranate text-xs text-white; }
+    #contribution-app .contribution-notice { @apply rounded-xl border border-border bg-soft/60 p-4 text-secondary; }
+    #contribution-app .contribution-disclosure { @apply rounded-xl border border-border px-4 pb-3; }
+    #contribution-app .contribution-text-button { @apply inline-flex min-h-11 items-center px-2 text-sm font-semibold text-pomegranate underline underline-offset-4; }
+    #contribution-app .contribution-search-status { @apply rounded-xl bg-soft/60 p-3 text-sm leading-7 text-secondary; }
+    #contribution-app .contribution-search-status:empty { @apply hidden; }
+    #contribution-app .field-error:not(:empty) { @apply mt-2 block text-sm font-normal leading-6 text-pomegranate-dark; }
+    #contribution-app .field[aria-invalid='true'] { @apply border-pomegranate bg-pomegranate/5 ring-1 ring-pomegranate/20; }
+    #contribution-app label:has(input[aria-invalid='true']):not(:has(.field)) { @apply rounded-lg outline-2 outline-pomegranate; }
+    #contribution-app label:has(input.sr-only:focus-visible) { @apply rounded-lg outline-2 outline-offset-2 outline-pomegranate; }
+    #contribution-app [data-step] { scroll-margin-top: 2rem; }
+    #contribution-app .contribution-actions { padding-bottom: max(.75rem, env(safe-area-inset-bottom)); }
+    #contribution-app progress { @apply h-1.5 overflow-hidden rounded-full accent-positive; }
+    #contribution-app #summary-body, #contribution-app #summary-place { overflow-wrap: anywhere; }
+    #contribution-app button:disabled { @apply cursor-wait; }
+    @media (max-width: 420px) {
+        #contribution-app .contribution-actions { @apply gap-2; }
+        #contribution-app .contribution-actions button { @apply px-3 text-xs; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        #contribution-app * { scroll-behavior: auto; transition: none; }
+    }
+}
+
+#contribution-app .contribution-search-status[data-failed='true'] { color: var(--color-pomegranate-dark); background: color-mix(in srgb, var(--color-pomegranate) 5%, white); border: 1px solid color-mix(in srgb, var(--color-pomegranate) 30%, white); }
+
+@media (width < 64rem) {
+    #contribution-app .contribution-actions { bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
+}

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\MediaCategory;
 use App\Models\Business;
+use App\Models\BusinessSpecification;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Review;
@@ -13,6 +14,7 @@ use App\Support\SchemaOrg;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -42,17 +44,35 @@ class BusinessController extends Controller
         ]);
     }
 
-    public function discovery(Request $request): View
+    public function discovery(Request $request, BusinessHours $hours): View
     {
-        $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer', 'exists:categories,id']]);
+        $request->validate([
+            'query' => ['nullable', 'string', 'max:180'],
+            'city' => ['nullable', 'string', 'exists:cities,name'],
+            'category' => ['nullable', 'integer', 'exists:categories,id'],
+            'sort' => ['nullable', 'string', Rule::in(['recommended', 'rating', 'reviews', 'newest'])],
+            'price' => ['nullable', 'array'],
+            'price.*' => ['integer', Rule::in([1, 2, 3, 4])],
+            'rating' => ['nullable', 'integer', 'between:1,5'],
+            'open_now' => ['nullable', 'boolean'],
+            'features' => ['nullable', 'array'],
+            'features.*' => ['integer', Rule::exists('business_specifications', 'id')->where('is_active', true)],
+        ]);
         $cities = City::where('is_active', true)->orderBy('position')->orderBy('name')->get();
         $city = $cities->firstWhere('name', $request->input('city') ?: $request->session()->get('discovery.city'))
             ?? $cities->firstWhere('name', 'تهران') ?? $cities->first();
         $request->session()->put('discovery.city', $city?->name);
         $categories = Category::where('is_active', true)->orderBy('position')->orderBy('name')->get();
+        $specifications = BusinessSpecification::where('is_active', true)->orderBy('position')->get();
         $term = BusinessIdentity::normalize($request->input('query') ?? '');
         $matchingCategories = $categories->filter(fn ($category) => $term !== '' && str_contains(BusinessIdentity::normalize($category->name), $term))->pluck('id');
-        $businesses = Business::where('status', 'approved')
+        $sort = $request->input('sort', 'recommended');
+        $priceFilter = collect($request->input('price', []))->filter(fn ($v) => in_array((int) $v, [1, 2, 3, 4], true))->map(fn ($v) => (int) $v)->values()->all();
+        $ratingFilter = $request->integer('rating') ?: null;
+        $openNow = $request->boolean('open_now');
+        $featureIds = collect($request->input('features', []))->filter()->map(fn ($v) => (int) $v)->values()->all();
+
+        $baseQuery = Business::where('status', 'approved')
             ->where('normalized_city', $city?->normalized_name)
             ->when($term !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($term, $matchingCategories): void {
                 $query->where('normalized_name', 'like', '%'.$term.'%')
@@ -60,19 +80,57 @@ class BusinessController extends Controller
                     ->orWhereIn('category_id', $matchingCategories);
             }))
             ->when($request->integer('category'), fn (Builder $query, int $category) => $query->where('category_id', $category))
-            ->with(['featuredPhotos', 'photos' => fn ($query) => $query->limit(1)])
-            ->withCount('reviews')->withAvg('reviews', 'rating')
-            ->orderByDesc('reviews_count')->orderByDesc('reviews_avg_rating')->orderBy('businesses.id')
-            ->paginate(12)->appends([...$request->only('query', 'category'), 'city' => $city?->name]);
-        $mapBusinesses = $businesses->map(fn (Business $business) => [
+            ->when($priceFilter !== [], fn (Builder $query) => $query->whereIn('price_range', $priceFilter))
+            ->when($featureIds !== [], function (Builder $query) use ($featureIds): void {
+                foreach ($featureIds as $fid) {
+                    $query->whereHas('specifications', fn (Builder $q) => $q->where('business_specifications.id', $fid));
+                }
+            })
+            ->with(['featuredPhotos', 'photos' => fn ($query) => $query->limit(1), 'specifications' => fn ($q) => $q->where('is_active', true)->orderBy('position'), 'category', 'reviews' => fn ($q) => $q->published()->with('author:id,name')->latest()->limit(1)])
+            ->withCount('reviews')->withAvg('reviews', 'rating');
+
+        // Sorting: Yelp-inspired "Recommended" = reviews_count + rating + featured boost
+        $baseQuery->when($sort === 'rating', fn (Builder $q) => $q->orderByDesc('reviews_avg_rating')->orderByDesc('reviews_count'))
+            ->when($sort === 'reviews', fn (Builder $q) => $q->orderByDesc('reviews_count')->orderByDesc('reviews_avg_rating'))
+            ->when($sort === 'newest', fn (Builder $q) => $q->latest('businesses.id'))
+            ->when($sort === 'recommended' || $sort === null, fn (Builder $q) => $q->orderByDesc('reviews_count')->orderByDesc('reviews_avg_rating')->orderBy('businesses.id'));
+
+        if ($ratingFilter) {
+            $baseQuery->whereRaw('(SELECT AVG(rating) FROM reviews WHERE reviews.business_id = businesses.id AND reviews.deleted_at IS NULL AND reviews.status = ? ) >= ?', ['published', $ratingFilter]);
+        }
+
+        // Open-now filtering: JSON weekly_hours not easily queryable; filter in-memory to keep Yelp-like "Open Now"
+        if ($openNow) {
+            // Fetch a larger window then filter in PHP to keep pagination accurate
+            $all = $baseQuery->get();
+            $filtered = $all->filter(fn (Business $b) => ($status = $hours->status($b->weekly_hours)) && $status['is_open']);
+            $page = max(1, $request->integer('page', 1));
+            $perPage = 12;
+            $total = $filtered->count();
+            $items = $filtered->slice(($page - 1) * $perPage, $perPage)->values();
+            $businesses = new LengthAwarePaginator($items, $total, $perPage, $page, ['path' => $request->url(), 'query' => $request->query()]);
+            $businesses->appends([...$request->only('query', 'category', 'sort', 'rating', 'open_now'), 'city' => $city?->name, 'price' => $priceFilter, 'features' => $featureIds]);
+        } else {
+            $businesses = $baseQuery->paginate(12)->appends([...$request->only('query', 'category', 'sort', 'rating', 'open_now'), 'city' => $city?->name, 'price' => $priceFilter, 'features' => $featureIds]);
+        }
+        $mapBusinesses = $businesses->getCollection()->map(fn (Business $business) => [
             'id' => $business->id, 'name' => $business->name, 'address' => $business->address,
             'latitude' => $business->latitude, 'longitude' => $business->longitude,
             'url' => route('businesses.show', $business->slug),
             'rating' => $business->reviews_count ? round($business->reviews_avg_rating, 1) : null,
             'reviews' => $business->reviews_count, 'price' => $business->price_range,
-        ]);
+        ])->values();
 
-        return view('discovery', compact('businesses', 'categories', 'cities', 'city', 'mapBusinesses'));
+        // For Yelp-like filter counts & active chips helper
+        $activeFilters = [
+            'price' => $priceFilter,
+            'rating' => $ratingFilter,
+            'open_now' => $openNow,
+            'features' => $featureIds,
+            'sort' => $sort !== 'recommended' ? $sort : null,
+        ];
+
+        return view('discovery', compact('businesses', 'categories', 'cities', 'city', 'mapBusinesses', 'specifications', 'activeFilters', 'sort'));
     }
 
     public function search(Request $request): JsonResponse

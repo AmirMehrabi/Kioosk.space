@@ -2,6 +2,8 @@
 
 return [
     'required' => 'وارد کردن :attribute ضروری است.',
+    'required_with' => 'وارد کردن :attribute ضروری است.',
+    'date_format' => 'قالب :attribute معتبر نیست؛ ساعت را مانند ۰۹:۳۰ وارد کنید.',
     'required_if' => 'وارد کردن :attribute ضروری است.',
     'required_without' => 'وارد کردن :attribute ضروری است.',
     'present' => 'اطلاعات :attribute ارسال نشده است.',
@@ -25,5 +27,5 @@ return [
     'min' => ['string' => ':attribute باید حداقل :min نویسه باشد.', 'numeric' => ':attribute باید حداقل :min باشد.', 'array' => ':attribute باید حداقل :min مورد داشته باشد.'],
     'max' => ['string' => ':attribute باید حداکثر :max نویسه باشد.', 'numeric' => ':attribute باید حداکثر :max باشد.', 'array' => ':attribute باید حداکثر :max مورد داشته باشد.', 'file' => 'حجم عکس باید حداکثر ۱۰ مگابایت باشد.'],
     'between' => ['numeric' => ':attribute باید بین :min و :max باشد.'],
-    'attributes' => ['name' => 'نام مکان', 'city' => 'شهر', 'address' => 'آدرس', 'category_id' => 'دسته‌بندی', 'phone' => 'تلفن', 'website' => 'وب‌سایت', 'opening_hours' => 'ساعت کار', 'rating' => 'امتیاز', 'body' => 'متن', 'visit_date' => 'تاریخ بازدید', 'display_name' => 'نام نمایشی', 'photo_ids' => 'عکس‌ها', 'photo' => 'عکس', 'reason' => 'دلیل', 'target_id' => 'مکان مقصد', 'mobile' => 'شماره موبایل', 'code' => 'کد ورود', 'latitude' => 'عرض جغرافیایی', 'longitude' => 'طول جغرافیایی'],
+    'attributes' => ['phones' => 'شماره‌های تلفن', 'phones.*.label' => 'عنوان تلفن', 'phones.*.value' => 'شماره تلفن', 'websites' => 'وب‌سایت‌ها', 'websites.*.label' => 'عنوان وب‌سایت', 'websites.*.url' => 'وب‌سایت', 'weekly_hours' => 'ساعت کاری', 'weekly_hours.*.closed' => 'وضعیت تعطیلی', 'weekly_hours.*.shifts' => 'نوبت‌های کاری', 'weekly_hours.*.shifts.*.opens' => 'ساعت شروع', 'weekly_hours.*.shifts.*.closes' => 'ساعت پایان', 'weekly_hours.*.shifts.*.next_day' => 'روز بعد', 'featured_photo_ids' => 'عکس اصلی مکان', 'name' => 'نام مکان', 'city' => 'شهر', 'address' => 'آدرس', 'category_id' => 'دسته‌بندی', 'phone' => 'تلفن', 'website' => 'وب‌سایت', 'opening_hours' => 'ساعت کار', 'rating' => 'امتیاز', 'body' => 'متن', 'visit_date' => 'تاریخ بازدید', 'display_name' => 'نام نمایشی', 'photo_ids' => 'عکس‌ها', 'photo' => 'عکس', 'reason' => 'دلیل', 'target_id' => 'مکان مقصد', 'mobile' => 'شماره موبایل', 'code' => 'کد ورود', 'latitude' => 'عرض جغرافیایی', 'longitude' => 'طول جغرافیایی'],
 ];
