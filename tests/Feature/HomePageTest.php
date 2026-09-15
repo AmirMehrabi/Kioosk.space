@@ -33,6 +33,22 @@ class HomePageTest extends TestCase
             ->assertSee('action="'.route('discovery').'#places"', false);
     }
 
+    public function test_homepage_categories_render_distinct_three_color_icons(): void
+    {
+        $response = $this->get(route('home'));
+
+        $response->assertOk()
+            ->assertSee('data-category-icon="restaurant"', false)
+            ->assertSee('data-category-icon="cafe"', false)
+            ->assertSee('data-category-icon="shopping"', false)
+            ->assertSee('data-category-icon="medical"', false)
+            ->assertSee('data-category-icon="beauty"', false)
+            ->assertSee('data-category-icon="home-services"', false)
+            ->assertSee('data-category-icon="tourism"', false)
+            ->assertSee('data-category-icon="other"', false);
+        $this->assertSame(8, substr_count($response->getContent(), 'data-icon-palette="light-dark-red"'));
+    }
+
     public function test_homepage_shows_twelve_newest_public_reviews_and_offers_load_more(): void
     {
         $reviews = collect();

@@ -44,11 +44,12 @@
 
 <section class="mt-10 border-t border-border pt-10 pb-4 sm:mt-14 sm:pt-12" aria-labelledby="categories-title">
     <div class="mb-7 text-center"><p class="mb-2 text-xs font-semibold text-muted">برای هر حال‌وهوا</p><h2 id="categories-title" class="text-2xl font-extrabold">امروز دنبال چی می‌گردی؟</h2></div>
-    @php($categoryIcons = ['رستوران' => 'utensils', 'کافه' => 'coffee', 'خرید' => 'shopping-bag', 'پزشک' => 'medical', 'زیبایی' => 'sparkles', 'خدمات منزل' => 'home', 'گردشگری' => 'compass', 'سایر' => 'grid'])
-    <nav aria-label="دسته‌بندی‌ها" class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+    @php($categoryIcons = ['رستوران' => 'restaurant', 'کافه' => 'cafe', 'خرید' => 'shopping', 'پزشک' => 'medical', 'زیبایی' => 'beauty', 'خدمات منزل' => 'home-services', 'گردشگری' => 'tourism', 'سایر' => 'other'])
+    <nav aria-label="دسته‌بندی‌ها" class="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
         @foreach($categories as $category)
-            <a href="{{ route('discovery', [...request()->only('city'), 'category' => $category->id]) }}" class="home-category group flex min-h-32 flex-col items-center justify-center gap-4 rounded border border-border bg-surface px-10 py-7  font-semibold text-secondary transition hover:-translate-y-1 hover:border-pomegranate/30 hover:text-pomegranate motion-reduce:transform-none">
-                <x-icon :name="$categoryIcons[$category->name] ?? 'grid'" class="size-11 stroke-[1.4] transition-transform group-hover:scale-110 motion-reduce:transform-none" /><span>{{ $category->name }}</span>
+            <a href="{{ route('discovery', [...request()->only('city'), 'category' => $category->id]) }}" class="home-category group flex min-h-36 flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-surface px-5 py-7 font-semibold text-secondary transition hover:-translate-y-1 hover:border-pomegranate/30 hover:text-ink motion-reduce:transform-none">
+                <x-category-icon :name="$categoryIcons[$category->name] ?? 'other'" class="transition-transform duration-300 group-hover:scale-105 motion-reduce:transform-none" />
+                <span>{{ $category->name }}</span>
             </a>
         @endforeach
     </nav>

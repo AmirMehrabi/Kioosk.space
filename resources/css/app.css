@@ -137,7 +137,8 @@
     .review-gallery[data-photo-count='1'] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
     .review-gallery[data-photo-count='2'] { grid-template-rows: 1fr; }
     .review-gallery[data-photo-count='3'] > :first-child { grid-row: span 2; }
-    .home-category:hover { box-shadow: 0 8px 24px rgb(36 27 20 / 4%); }
+    .home-category { box-shadow: 0 2px 10px rgb(36 27 20 / 2%); }
+    .home-category:hover { box-shadow: 0 12px 30px rgb(36 27 20 / 7%); }
 }
 .review-lightbox { margin: auto; max-width: min(94vw, 1100px); max-height: 90dvh; padding: 0; border: 0; border-radius: 16px; background: #171717; color: white; }
 .review-lightbox::backdrop { background: #171717db; }
