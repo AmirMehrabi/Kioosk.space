@@ -33,12 +33,20 @@
     @yield('content')
     </div>
 </main>
-<footer class="mx-auto flex max-w-6xl flex-col gap-4 border-t border-border px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-    <span>کیوسک؛ شهر از نگاه شما</span>
-    <nav class="flex flex-wrap items-center gap-3">
-        <a class="nav-link" href="{{ route('discovery') }}">کشف مکان‌ها</a>
-        <a class="nav-link" href="{{ route('contact') }}">تماس با ما</a>
-    </nav>
+<footer class="border-t border-border bg-surface">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-9 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div class="flex max-w-md flex-col gap-3">
+            <a href="{{ route('home') }}" class="w-fit text-lg font-extrabold text-ink">کیوسک</a>
+            <p class="text-sm leading-7 text-muted">جایی برای پیدا کردن کسب‌وکارهای محلی، خواندن تجربه‌های واقعی و تعریف کردن چیزی که خودتان دیده‌اید.</p>
+        </div>
+        <nav class="flex flex-wrap items-center gap-x-4 gap-y-1" aria-label="پیوندهای پایین صفحه">
+            <a class="nav-link" href="{{ route('discovery') }}">کشف مکان‌ها</a>
+            <a class="nav-link" href="{{ route('blog.index') }}">وبلاگ</a>
+            <a class="nav-link" href="{{ route('blog.show', 'contribution-guide') }}">راهنمای مشارکت</a>
+            <a class="nav-link" href="{{ route('about') }}">دربارهٔ ما</a>
+            <a class="nav-link" href="{{ route('contact') }}">تماس با ما</a>
+        </nav>
+    </div>
 </footer>
 </body>
 </html>

@@ -43,6 +43,16 @@
     .admin-nav-item { @apply flex min-h-11 items-center justify-between gap-3 rounded-xl px-3 py-2 text-sm font-semibold text-secondary transition hover:bg-soft hover:text-ink; }
     .nav-link { @apply inline-flex min-h-11 items-center rounded-lg px-2 text-sm font-medium text-secondary transition-colors hover:text-pomegranate motion-reduce:transition-none; }
     .nav-link-active { @apply text-pomegranate; }
+    .editorial-prose { @apply text-[1.0625rem] leading-[2.15] text-secondary sm:text-lg; }
+    .editorial-prose > * + * { @apply mt-7; }
+    .editorial-prose h2 { @apply mt-16 text-2xl font-extrabold leading-[1.65] tracking-tight text-ink sm:text-3xl; }
+    .editorial-prose h3 { @apply mt-12 text-xl font-extrabold leading-[1.7] text-ink sm:text-2xl; }
+    .editorial-prose strong { @apply font-extrabold text-ink; }
+    .editorial-prose a { @apply font-bold text-pomegranate underline decoration-pomegranate/30 decoration-2 underline-offset-4 transition-colors hover:decoration-pomegranate; }
+    .editorial-prose ul { @apply my-9 flex list-none flex-col gap-3 rounded-2xl bg-soft p-5 sm:p-7; }
+    .editorial-prose li { @apply relative pe-7; }
+    .editorial-prose li::before { content: ''; @apply absolute end-0 top-[0.8em] size-2 rounded-full bg-pomegranate; }
+    .editorial-prose blockquote { @apply my-10 border-e-4 border-pomegranate bg-pomegranate/5 px-5 py-4 text-xl font-bold leading-9 text-ink sm:px-7; }
     .admin-nav-item-active { @apply bg-pomegranate/5 text-pomegranate hover:bg-pomegranate/10 hover:text-pomegranate; }
     .admin-nav-count { @apply rounded-full bg-soft px-2 py-0.5 text-xs text-secondary; }
     .admin-nav-item-active .admin-nav-count { @apply bg-pomegranate/10 text-pomegranate; }

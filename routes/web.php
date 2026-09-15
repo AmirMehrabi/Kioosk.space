@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Portal;
+use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AdminAuditLogController;
 use App\Http\Controllers\AdminBusinessClaimController;
 use App\Http\Controllers\AdminBusinessController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\AdminCityController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\Auth\OtpController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\BusinessClaimController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\BusinessManagementController;
@@ -32,6 +34,9 @@ Route::get('/', [BusinessController::class, 'index'])->name('home');
 Route::get('/discovery', [BusinessController::class, 'discovery'])->name('discovery');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.store');
+Route::get('/about', AboutController::class)->name('about');
+Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/contribute', [ContributionController::class, 'create'])->middleware(AuthResponseHeaders::class)->name('contribute');
 Route::get('/businesses/search', [BusinessController::class, 'search'])->middleware('throttle:60,1,business-search')->name('businesses.search');
 Route::get('/media/{media}', [MediaController::class, 'show'])->name('media.show');
