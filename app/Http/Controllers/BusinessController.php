@@ -25,7 +25,7 @@ class BusinessController extends Controller
     {
         $request->validate(['query' => ['nullable', 'string', 'max:180'], 'city' => ['nullable', 'string', 'exists:cities,name'], 'category' => ['nullable', 'integer'], 'page' => ['nullable', 'integer', 'min:1']]);
         $recentReviews = Review::published()->whereIn('business_id', $this->searchQuery($request)->select('businesses.id'))
-            ->with(['author:id,name', 'business:id,name,slug,city', 'photos' => fn ($query) => $query->published()->latest()->orderBy('id')->limit(4)])
+            ->with(['author:id,name', 'business:id,name,slug,city', 'photos' => fn ($query) => $query->published()->latest()->orderBy('id')->limit(2)])
             ->latest('created_at')->latest('id')->simplePaginate(12)->withQueryString();
 
         if ($request->expectsJson()) {

@@ -136,7 +136,7 @@ class HomePageTest extends TestCase
     #[TestWith([3])]
     #[TestWith([4])]
     #[TestWith([5])]
-    public function test_review_gallery_displays_zero_to_four_photos(int $count): void
+    public function test_review_gallery_displays_up_to_two_photos(int $count): void
     {
         $review = $this->review();
         for ($index = 0; $index < $count; $index++) {
@@ -149,11 +149,11 @@ class HomePageTest extends TestCase
 
         $response = $this->get(route('home'))->assertOk();
 
-        $this->assertCount(min($count, 4), $response->viewData('recentReviews')->first()->photos);
+        $this->assertCount(min($count, 2), $response->viewData('recentReviews')->first()->photos);
         if ($count === 0) {
             $response->assertDontSee('data-photo-count=', false);
         } else {
-            $response->assertSee('data-photo-count="'.min($count, 4).'"', false);
+            $response->assertSee('data-photo-count="'.min($count, 2).'"', false);
         }
     }
 
