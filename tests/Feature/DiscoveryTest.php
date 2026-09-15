@@ -61,11 +61,24 @@ class DiscoveryTest extends TestCase
 
         $response = $this->get(route('discovery', ['city' => 'تهران', 'page' => 2]));
 
-        $response->assertOk()->assertSee('موقعیت دقیق ثبت نشده')->assertDontSee('data-focus-business=', false);
+        $response->assertOk()->assertSee('موقعیت روی نقشه ثبت نشده')->assertDontSee('data-focus-business=', false)->assertDontSee('id="discovery-map-panel"', false);
         $this->assertCount(1, $response->viewData('mapBusinesses'));
         $this->assertSame($response->viewData('businesses')->pluck('id')->all(), $response->viewData('mapBusinesses')->pluck('id')->all());
         $this->assertNull($response->viewData('mapBusinesses')->first()['latitude']);
         $this->assertStringContainsString('city=', $response->viewData('businesses')->previousPageUrl());
+    }
+
+    public function test_discovery_explains_the_first_step_and_uses_predictable_result_actions(): void
+    {
+        $business = Business::factory()->create(['latitude' => 35.7, 'longitude' => 51.4]);
+
+        $this->get(route('discovery', ['city' => 'تهران']))
+            ->assertOk()
+            ->assertSee('جای بعدی‌ات را پیدا کن')
+            ->assertSee('دنبال چه می‌گردی؟')
+            ->assertSee('در کدام شهر؟')
+            ->assertSee('نمایش '.$business->name.' روی نقشه', false)
+            ->assertSee('دیدن جزئیات');
     }
 
     public function test_map_payload_and_result_names_escape_html(): void

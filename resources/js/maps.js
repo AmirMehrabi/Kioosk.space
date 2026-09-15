@@ -99,7 +99,7 @@ function initializeDiscovery(root) {
         if (!point) return;
         const tooltip = document.createElement('span');
         tooltip.textContent = business.name;
-        const marker = L.marker(point, {icon: markerIcon(persianNumber(index + 1)), title: business.name, alt: business.name})
+        const marker = L.marker(point, {icon: markerIcon(persianNumber((data.resultStart || 1) + index)), title: business.name, alt: business.name})
             .addTo(map).bindTooltip(tooltip, {direction: 'top'}).bindPopup(businessPopup(business), {maxWidth: 260, autoPan: false});
         marker.on('click', () => selectBusiness(business.id));
         markers.set(business.id, marker);
@@ -113,6 +113,12 @@ function initializeDiscovery(root) {
 
     root.querySelectorAll('[data-focus-business]').forEach(button => button.addEventListener('click', () => selectBusiness(Number(button.dataset.focusBusiness), true)));
     root.querySelectorAll('[data-discovery-view]').forEach(button => button.addEventListener('click', () => showView(button.dataset.discoveryView)));
+    root.querySelector('[data-toggle-map]')?.addEventListener('click', event => {
+        const hidden = root.toggleAttribute('data-map-hidden');
+        event.currentTarget.setAttribute('aria-pressed', String(hidden));
+        root.querySelector('[data-map-toggle-label]').textContent = hidden ? 'نمایش نقشه' : 'پنهان کردن نقشه';
+        if (!hidden) requestAnimationFrame(() => map.invalidateSize({animate: false}));
+    });
     const fitButton = root.querySelector('[data-fit-results]');
     fitButton.hidden = mapped.length === 0;
     fitButton.addEventListener('click', fitResults);
