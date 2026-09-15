@@ -133,7 +133,7 @@
     .review-avatar[data-tone='2'] { background: #f5e6e2; color: #af6457; }
     .review-avatar[data-tone='3'] { background: #e4ebed; color: #56767d; }
     .review-excerpt { min-height: 5.25rem; }
-    .review-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; height: 210px; overflow: hidden; border-radius: 10px; }
+    .review-gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; height: 150px; overflow: hidden; border-radius: 10px; }
     .review-gallery[data-photo-count='1'] { grid-template-columns: 1fr; }
     .home-category { box-shadow: 0 2px 10px rgb(36 27 20 / 2%); }
     .home-category:hover { box-shadow: 0 12px 30px rgb(36 27 20 / 7%); }
